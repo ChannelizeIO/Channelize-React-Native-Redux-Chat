@@ -36,8 +36,6 @@ export default class Example extends Component {
 
   render() {
     var client = new Channelize.client({publicKey: PUBLIC_KEY});
-    const res = await client.connect(USER_ID, ACCESS_TOKEN);
-    const conversation = client.Conversation.getConversation(CONVERSATION_ID)
 
     return (
       <Provider store={store}>
