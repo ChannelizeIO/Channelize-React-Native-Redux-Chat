@@ -67,12 +67,12 @@ export default = (props) => {
 	var client = new Channelize.client({publicKey: PUBLIC_KEY});
 
 	return (
-		<Provider store={store}>
-			<App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-				<ConversationList />
-				<ConversationWindow />
-			</App>
-		</Provider>
+	  <Provider store={store}>
+	    <App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+	      <ConversationList />
+	      <ConversationWindow />
+	    </App>
+	  </Provider>
 	)
 }
 ```
@@ -91,11 +91,11 @@ export default (props) => {
 	var client = new Channelize.client({publicKey: PUBLIC_KEY});
 
 	return (
-		<Provider store={store}>
-			<App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-				<ConversationWindow userId={USER_ID}/>
-			</App>
-		</Provider>
+	  <Provider store={store}>
+	    <App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+	      <ConversationWindow userId={USER_ID}/>
+	    </App>
+	  </Provider>
 	)
 }
 ```
@@ -118,25 +118,25 @@ export default (props) => {
 
 	useEffect(() => {
 	    getConversation();
-	}, [conversation]);
+	}, []);
 
 	const getConversation = async () => {
 	    const res = await client.connect(USER_ID, ACCESS_TOKEN);
 	    const conversation = await client.Conversation.getConversation(CONVERSATION_ID)
-    	setConversation(conversation);
+    	    setConversation(conversation);
   	};
 
 	if (!conversation) {
-		return null;
+	  return null;
 	}
 
 
 	return (
-		<Provider store={store}>
-			<App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-				<ConversationWindow conversation={conversation}/>
-			</App>
-		</Provider>
+	  <Provider store={store}>
+            <App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+	      <ConversationWindow conversation={conversation}/>
+	    </App>
+	  </Provider>
 	)
 }
 ```
