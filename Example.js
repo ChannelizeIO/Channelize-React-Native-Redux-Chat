@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 
-import { store } from './src/store';
-import App from './src/components/App';
-import ConversationWindow from './src/components/ConversationWindow';
-import ConversationList from './src/components/ConversationList';
+import { App, ConversationList, ConversationWindow, store } from './src';
 import { Channelize } from './channelize-websdk/dist/index';
 
 if (process.env.NODE_ENV === 'development') {
@@ -15,7 +12,6 @@ if (process.env.NODE_ENV === 'development') {
 const PUBLIC_KEY; //Channelize.io public key
 const LOGGEDIN_USER_ID;//User id of loggedin user
 const CH_ACCESS_TOKEN; //Channelize access token of loggedin userid 
-const ANOTHER_USER_ID; //The user id of another user to start chat
 
 export default class Example extends Component {
   constructor(props) {

@@ -1,19 +1,24 @@
 ## Setup
-1. Install React Native CLI
+1. Git clone
+```
+git clone https://github.com/ChannelizeIO/Channelize-React-Native-Redux
+```
+
+2. Install React Native CLI
   ```
 npm install -g react-native-cli
   ```
-2. Install npm dependencies
+3. Install npm dependencies
 ```
 npm run install
 ```
-3. **For Android**: (Please see all the steps in detail in [React native doc](https://reactnative.dev/docs/environment-setup)) 
+4. **For Android**: (Please see all the steps in detail in [React native doc](https://reactnative.dev/docs/environment-setup)) 
    a) Install Android Studio (https://developer.android.com/studio/index.html)
    b) Install Android SDK
    c) Configure the ANDROID_HOME environment variable
    d) Connect Android device or Virtual device to Android Studio
 
-4. Run the react native application by following commands:
+5. Run the react native application by following commands:
 
 ```
    npm run start
@@ -55,48 +60,45 @@ To add the components, you need channelize public key and access token which can
  To add the components, you need channelize public key and access token which can explore more [here](https://docs.channelize.io/platform-api-authentication-public/)
 
 ```
-import ConversationList from './src/components/ConversationList';
-import ConversationWindow from './src/components/ConversationWindow';
-import { Channelize } from 'channelize-chat';
-
-import { Provider } from 'react-redux';
-import { store } from './src/store';
+import { App, ConversationList, ConversationWindow, store } from './src';
 // You can use your store file also
 
-export default = (props) => {
-	var client = new Channelize.client({publicKey: PUBLIC_KEY});
+import { Channelize } from 'channelize-chat';
+import { Provider } from 'react-redux';
 
-	return (
-		<Provider store={store}>
-			<App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-				<ConversationList />
-				<ConversationWindow />
-			</App>
-		</Provider>
-	)
+export default = (props) => {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+
+    return (
+        <Provider store={store}>
+            <App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+                <ConversationList />
+                <ConversationWindow />
+            </App>
+        </Provider>
+    )
 }
 ```
 
 ## Conversation window `userId` prop
 
 ```
-import ConversationWindow from './src/components/ConversationList';
-import { Channelize } from 'channelize-chat';
-
-import { Provider } from 'react-redux';
-import { store } from './src/store';
+import { App, ConversationWindow, store } from './src';
 // You can use your store file also
 
-export default (props) => {
-	var client = new Channelize.client({publicKey: PUBLIC_KEY});
+import { Channelize } from 'channelize-chat';
+import { Provider } from 'react-redux';
 
-	return (
-		<Provider store={store}>
-			<App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-				<ConversationWindow userId={USER_ID}/>
-			</App>
-		</Provider>
-	)
+export default (props) => {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+
+    return (
+        <Provider store={store}>
+            <App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+                <ConversationWindow userId={USER_ID}/>
+            </App>
+        </Provider>
+    )
 }
 ```
 
@@ -104,39 +106,38 @@ export default (props) => {
 
 ```
 import React, { useEffect, useState } from 'react';
-import ConversationWindow from './src/components/ConversationList';
-import { Channelize } from 'channelize-chat';
-
-import { Provider } from 'react-redux';
-import { store } from './src/store';
+import { App, ConversationWindow, store } from './src';
 // You can use your store file also
 
+import { Channelize } from 'channelize-chat';
+import { Provider } from 'react-redux';
+
 export default (props) => {
-	const [conversation, setConversation] = useState('');
+    const [conversation, setConversation] = useState('');
 
-	const client = new Channelize.client({publicKey: PUBLIC_KEY});
+    const client = new Channelize.client({publicKey: PUBLIC_KEY});
 
-	useEffect(() => {
-	    getConversation();
-	}, [conversation]);
+    useEffect(() => {
+        getConversation();
+    }, []);
 
-	const getConversation = async () => {
-	    const res = await client.connect(USER_ID, ACCESS_TOKEN);
-	    const conversation = await client.Conversation.getConversation(CONVERSATION_ID)
-    	setConversation(conversation);
-  	};
+    const getConversation = async () => {
+        const res = await client.connect(USER_ID, ACCESS_TOKEN);
+        const conversation = await client.Conversation.getConversation(CONVERSATION_ID)
+        setConversation(conversation);
+    };
 
-	if (!conversation) {
-		return null;
-	}
+    if (!conversation) {
+        return null;
+    }
 
 
-	return (
-		<Provider store={store}>
-			<App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-				<ConversationWindow conversation={conversation}/>
-			</App>
-		</Provider>
-	)
+    return (
+        <Provider store={store}>
+            <App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+                <ConversationWindow conversation={conversation}/>
+            </App>
+        </Provider>
+    )
 }
 ```
