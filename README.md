@@ -1,7 +1,11 @@
+# React Native Redux UI Kit For [Channelize.io](https://channelize.io)
+
+This is react native redux UI Kit using Channelize.io Javascript SDKs. https://docs.channelize.io/react-native-redux
+
 ## Setup
 1. Git clone
 ```
-git clone https://github.com/ChannelizeIO/Channelize-React-Native-Redux
+git clone https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat
 ```
 
 2. Install React Native CLI
