@@ -14,7 +14,7 @@ npm install -g react-native-cli
   ```
 3. Install npm dependencies
 ```
-npm run install
+npm install
 ```
 4. **For Android**: (Please see all the steps in detail in [React native doc](https://reactnative.dev/docs/environment-setup)) 
    a) Install Android Studio (https://developer.android.com/studio/index.html)
