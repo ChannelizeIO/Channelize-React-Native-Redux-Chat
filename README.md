@@ -145,3 +145,9 @@ export default (props) => {
     )
 }
 ```
+## How to add UI Kit into your existing app
+Please follow the below steps to add UI kit into your existing app:
+1. Git clone the UI kit repository in a folder of your project's root directory.
+2. If you are already using Redux, then import all reducers from UI kit to your application's root reducer file.
+3. If you are not using Redux, then import `store` from UI kit in your application and pass `store` in `Redux Provider` before using `App`component of UI Kit as you can see in the above examples.
+4. Start using UI kit's components in your application component as you can see in the above examples.
