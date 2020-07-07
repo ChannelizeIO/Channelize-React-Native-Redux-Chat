@@ -4,6 +4,7 @@ import {
   CONNECT_FAIL,
   DISCONNECT_SUCCESS,
   DISCONNECT_FAIL,
+  TYPING_EVENT,
   NEW_MESSAGE_RECEIVED_EVENT,
   USER_STATUS_UPDATED_EVENT,
   MARK_AS_READ_EVENT,
@@ -14,6 +15,9 @@ import {
   MEMBERS_REMOVED_EVENT,
   CONVERSATION_UPDATED_EVENT,
   USER_UPDATED_EVENT,
+  USER_REMOVED_EVENT,
+  USER_MUTE_UPDATED_EVENT,
+  USER_CONVERSATION_DELETED_EVENT,
   TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT
 } from '../constants';
 
@@ -154,6 +158,27 @@ export const registerEventHandlers = (client) => {
       })
     });
 
+    client.chsocket.on('user.removed', function (response) {
+      dispatch({
+        type: USER_REMOVED_EVENT,
+        payload: response
+      });
+    });
+
+    client.chsocket.on('user.conversation_deleted', function (response) {
+      dispatch({
+        type: USER_CONVERSATION_DELETED_EVENT,
+        payload: response
+      });
+    });
+
+    client.chsocket.on('user.mute_updated', function (res) {
+      dispatch({
+        type: USER_MUTE_UPDATED_EVENT,
+        payload: res
+      });
+    });
+
     client.chsocket.on('conversation.members_added', function (response) {
       dispatch({
         type: MEMBERS_ADDED_EVENT,
@@ -185,6 +210,14 @@ export const registerEventHandlers = (client) => {
     client.chsocket.on('user.total_unread_message_count_updated', function (response) {
       dispatch({
         type: TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT,
+        payload: response
+      });
+    });
+
+    client.chsocket.on('conversation.typing', function (response) {
+      console.log("response", response)
+      dispatch({
+        type: TYPING_EVENT,
         payload: response
       });
     });

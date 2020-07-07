@@ -5,12 +5,56 @@ import {
   SENDING_MESSAGE,
   SEND_MESSAGE_FAIL,
   SEND_MESSAGE_SUCCESS,
+  SENDING_FILE,
+  SEND_FILE_FAIL,
+  SEND_FILE_SUCCESS,
   LOADING_LOAD_MORE_MESSAGES,
   LOAD_MORE_MESSAGES_SUCCESS,
   LOAD_MORE_MESSAGES_FAIL,
   SET_ACTIVE_CONVERSATION,
   SET_ACTIVE_USERID
 } from '../constants';
+import { uploadFile } from '../native';
+
+export const sendFileToConversation = (client, conversation, file, body) => {
+  return async dispatch => {
+    dispatch({
+      type: SENDING_FILE,
+      payload: body
+    });
+    try {
+      const fileData = await uploadFile(client, file, 'image');
+      body = {
+        id: body.id,
+        attachments: [fileData]
+      }
+      return conversation.sendMessage(body, (err, response) => {
+        if (err) {
+          body.error = err;
+          dispatch({
+            type: SEND_FILE_FAIL,
+            payload: body
+          });
+          return;
+        }
+        dispatch({
+          type: SEND_FILE_SUCCESS,
+          payload: response
+        });
+        return
+      });
+    } catch(err) {
+      if (err) {
+        body.error = err;
+        dispatch({
+          type: SEND_FILE_FAIL,
+          payload: body
+        });
+        return;
+      }
+    }
+  }
+};
 
 export const sendMessageToConversation = (conversation, body) => {
   return dispatch => {
@@ -18,6 +62,10 @@ export const sendMessageToConversation = (conversation, body) => {
       type: SENDING_MESSAGE,
       payload: body
     });
+    body = {
+      id: body.id,
+      body: body.body
+    }
     return conversation.sendMessage(body, (err, response) => {
       if (err) {
         body.error = err;

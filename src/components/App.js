@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ChannelizeProvider } from '../context';
+import { theme } from '../styles/theme';
 import { chConnect, setConnected, registerEventHandlers } from '../actions';
 import { connect } from 'react-redux';
 import { Text, ActivityIndicator } from 'react-native';
@@ -9,10 +10,17 @@ class App extends Component {
   static propTypes = {
     /** The Channelize.io client object */
     client: PropTypes.object.isRequired,
+
+    /** The Channelize.io client object */
+    theme: PropTypes.object,
   }
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      theme: {}
+    }
   }
 
   componentDidMount() {
@@ -42,7 +50,7 @@ class App extends Component {
   })
 
   render() {
-    const { connected, error, connecting } = this.props;
+    const { theme, connected, error, connecting } = this.props;
 
     if (error) {
       return (
@@ -52,12 +60,14 @@ class App extends Component {
 
     return (
       <ChannelizeProvider value={this.getContext()}>
-        { connecting && <ActivityIndicator size="large" color="#0084ff" /> }
+        { connecting && <ActivityIndicator size="large" color={theme.colors.primary} /> }
         { this.props.children }
       </ChannelizeProvider>
     );
   }
 };
+
+App = theme(App)
 
 function mapStateToProps({ client }) {
   return { ...client };

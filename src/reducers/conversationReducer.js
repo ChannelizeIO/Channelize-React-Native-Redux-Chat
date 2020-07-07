@@ -13,7 +13,8 @@ import {
   CONVERSATION_UPDATED_EVENT,
   USER_UPDATED_EVENT,
   MARK_AS_READ_EVENT,
-  TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT 
+  TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT,
+  LIST_MEMBERS_SUCCESS
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
 
@@ -263,6 +264,36 @@ export const totalUnreadMessageCountUpdatedEvent = (state, action) => {
   state.list = finalList;
 }
 
+// export const listMembersSuccess = (state, action) => {
+//   let { conversation, members, timestamp } = action.payload;
+
+//   let conversationIndex;
+//   let latestConversation;
+
+//   const finalList = state.list.map((item, index) => {
+//     if (item.id == conversation.id) {
+//       item.memberCount = conversation.memberCount;
+//       item.updatedAt = timestamp;
+//       item.members = item.members.concat(members)
+
+//       conversationIndex = index;
+//       latestConversation = item;
+
+//       return item;
+//     } else {
+//       return item;
+//     }
+//   })
+
+//   // Move up the latest conversation
+//   if (conversationIndex > 0) {
+//     finalList.splice(conversationIndex, 1);
+//     finalList.unshift(latestConversation);
+//   }
+
+//   state.list = finalList;
+// };
+
 export const handlers = {
   [LOADING_CONVERSATION_LIST]: loadingConversationList,
   [CONVERSATION_LIST_FAIL]: listConversationFail,
@@ -278,7 +309,9 @@ export const handlers = {
   [CONVERSATION_UPDATED_EVENT]: conversationUpdated,
   [USER_UPDATED_EVENT]: userUpdated,
   [MARK_AS_READ_EVENT]: markAsRead,
-  [TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT]: totalUnreadMessageCountUpdatedEvent
+  [TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT]: totalUnreadMessageCountUpdatedEvent,
+  // [LIST_MEMBERS_SUCCESS]: listMembersSuccess,
+  [MARK_AS_READ_EVENT]: markAsRead,
 };
 
 export default createReducer(INITIAL_STATE, handlers);

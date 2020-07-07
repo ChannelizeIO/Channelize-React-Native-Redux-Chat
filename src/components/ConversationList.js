@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react';
-import { View, Image, TouchableHighlight, FlatList, ActivityIndicator } from 'react-native';
+import { View, Image, TouchableHighlight, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { withChannelizeContext } from '../context';
+import { theme } from '../styles/theme';
+import styled from 'styled-components/native';
 import { connect } from 'react-redux';
 import { capitalize, dateTimeParser, getLastMessageString } from '../utils';
 import {
@@ -10,9 +12,63 @@ import {
 } from "../actions";
 import { ListItem, Text, Badge } from 'react-native-elements'
 import Avatar from './Avatar'
+import Icon from 'react-native-vector-icons/Ionicons';
+import ContactList from './ContactList';
+
+const Container = styled.View`
+  position: absolute;
+  top: 0px;
+  height: 100%;
+  width: 100%;
+  background-color: ${props => props.theme.conversationList.backgroundColor };
+  display: flex;
+  flex-direction: column;
+`;
+
+const Header = styled.View`
+  padding: 10px;
+  flex-direction: row;
+  background-color: ${props => props.theme.conversationList.backgroundColor };
+`;
+
+const HeaderImage = styled.View`
+  justify-content: center;
+  margin-right: 10px;
+`;
+
+const HeaderTitle = styled.View`
+  justify-content: center;
+  flex-grow: 8;
+`;
+
+const HeaderTitleText = styled.Text`
+  color: ${props => props.theme.conversationList.header.titleColor };
+  text-transform: capitalize;
+  font-weight: bold;
+  font-size: 20px;
+`;
+
+const HeaderIcons = styled.View`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+`;
+
+const LastMessageText = styled.Text`
+  color: ${props => props.theme.conversationList.message.textColor };
+`;
+
+const DateText = styled.Text`
+  color: ${props => props.theme.conversationList.date.color };
+`;
+
+const TitleText = styled.Text`
+  color: ${props => props.theme.conversationList.title.color };
+  font-weight: bold;
+`;
 
 class ConversationList extends PureComponent {
-    constructor(props) {
+  constructor(props) {
     super(props);
 
     this.limit = 30;
@@ -73,11 +129,12 @@ class ConversationList extends PureComponent {
   }
 
   _renderItem = rowData => {
+    const { theme } = this.props;
     const conversation = rowData.item;
     return (
       <ListItem
         component={TouchableHighlight}
-        containerStyle={{ backgroundColor: '#fff' }}
+        containerStyle={{ backgroundColor: theme.conversationList.backgroundColor }}
         key={conversation.id}
         leftAvatar={this._getAvatar(conversation)}
         title={this._renderTitle(conversation)}
@@ -87,14 +144,23 @@ class ConversationList extends PureComponent {
         rightSubtitle={this._renderRightSubtitle(conversation)}
         subtitleStyle={{ fontWeight: '300', fontSize: 11 }}
         onPress={() => this._onPress(conversation)}
-        bottomDivider
       />
     );
   };
 
   _onPress = conversation => {
-    console.log('onPress', conversation)
+    const { onSelect } = this.props;
     this.props.setActiveConversation(conversation);
+    if (onSelect && typeof onSelect == 'function') {
+      onSelect(conversation);
+    }
+  }
+
+  _onSearchIconClick = () => {
+    const { onSearchIconClick } = this.props;
+    if (onSearchIconClick && typeof onSearchIconClick == 'function') {
+      onSearchIconClick()
+    }
   }
 
   _renderTitle = conversation => {
@@ -111,17 +177,18 @@ class ConversationList extends PureComponent {
 
     return (
       <View>
-        <Text numberOfLines={1} style={styles.titleText}>{title}</Text>
+        <TitleText numberOfLines={1}>{title}</TitleText>
       </View>
     );
   };
 
   _renderBadge = conversation => {
+    let { theme } = this.props;
     let { unreadMessageCount } = conversation;
 
     if (unreadMessageCount) {
       unreadMessageCount = unreadMessageCount > 99 ? '99+' : unreadMessageCount;
-      return <Badge status="primary"  value={unreadMessageCount}/>
+      return <Badge badgeStyle={{backgroundColor: theme.colors.primary}}  value={unreadMessageCount}/>
     }
 
     return
@@ -129,10 +196,17 @@ class ConversationList extends PureComponent {
 
   _renderRightSubtitle = conversation => {
     const { lastMessage } = conversation;
-    return lastMessage ? dateTimeParser(conversation.updatedAt) : null;
+    const date = lastMessage ? dateTimeParser(conversation.updatedAt) : null;
+    return (
+      <View>
+        <DateText>{date}</DateText>
+      </View>
+    );
   };
 
   _getAvatar = conversation => {
+    const { theme } = this.props;
+
     let avatarUrl;
     let avatarTitle;
 
@@ -163,9 +237,9 @@ class ConversationList extends PureComponent {
           accessory={{
             name: 'dot-single',
             type: 'entypo',
-            color: '#64ba00',
+            color: theme.colors.greenColor,
             containerStyle: {
-              backgroundColor: '#64ba00',
+              backgroundColor: theme.colors.greenColor,
               borderRadius: 25
             },
           }}
@@ -188,13 +262,14 @@ class ConversationList extends PureComponent {
 
     return (
       <View>
-        <Text numberOfLines={1} style={styles.lastMessageText}>{lastMessageString}</Text>
+        <LastMessageText numberOfLines={1}>{lastMessageString}</LastMessageText>
       </View>
     );
   };
 
   render() {
-    let { userId, conversation, client, connected, connecting, list, loading, error, loadingMoreConversations } = this.props;
+    let { theme, userId, conversation, client, connected, connecting, list, loading, error, loadingMoreConversations } = this.props;
+
     if (connecting) {
       return null;
     }
@@ -221,98 +296,77 @@ class ConversationList extends PureComponent {
     let headetTitle = "Chats";
 
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerImage}>
-            <Avatar 
-              title={user.displayName}
-              source={headerImage}
-              accessory={{
-                name: 'dot-single',
-                type: 'entypo',
-                color: '#64ba00',
-                containerStyle: {
-                  backgroundColor: '#64ba00',
-                  borderRadius: 25
-                },
-              }}
-              showAccessory={true}
-            />
-          </View>
-          <View style={styles.headerTitle}>
-            <Text style={styles.headerTitleText} h3>{headetTitle}</Text>
-          </View>
-        </View>
+      <React.Fragment>
+        <Container>
+          <Header style={{
+            shadowColor: "#000",
+            shadowOpacity: 0.18,
+            shadowRadius: 1.00,
+            elevation: 1
+          }}>
+            <HeaderImage>
+              <Avatar 
+                title={user.displayName}
+                source={headerImage}
+                accessory={{
+                  name: 'dot-single',
+                  type: 'entypo',
+                  color: theme.colors.greenColor,
+                  containerStyle: {
+                    backgroundColor: theme.colors.greenColor,
+                    borderRadius: 25
+                  },
+                }}
+                showAccessory={true}
+              />
+            </HeaderImage>
+            <HeaderTitle>
+              <HeaderTitleText h3>{headetTitle}</HeaderTitleText>
+            </HeaderTitle>
+            <HeaderIcons>
+              <TouchableOpacity onPress={this._onSearchIconClick}>
+                <Icon 
+                  name ="ios-search" 
+                  size={30} 
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            </HeaderIcons>
+          </Header>
 
-        {!connecting && !connected && 
-          <View>
-            <Text>Disconnected</Text>
-          </View>
-        }
-
-        { loading &&
+          {!connecting && !connected && 
             <View>
-              <ActivityIndicator size="large" color="#0084ff" />
+              <Text>Disconnected</Text>
             </View>
-        }
+          }
 
-        { !loading &&
-          <FlatList
-            renderItem={this._renderItem}
-            data={list}
-            extraData={true}
-            keyExtractor={(item, index) => item.id}
-            onEndReached={this.loadMoreConversations}
-            ListEmptyComponent={<Text>No Conversation Found</Text>}
-          />
-        }
+          { loading &&
+              <View>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+              </View>
+          }
 
-        { loadingMoreConversations && <ActivityIndicator size="large" color="#0084ff" /> }
-      </View>
+          { !loading &&
+            <FlatList
+              renderItem={this._renderItem}
+              data={list}
+              extraData={true}
+              keyExtractor={(item, index) => item.id}
+              onEndReached={this.loadMoreConversations}
+              ListEmptyComponent={<Text>No Conversation Found</Text>}
+            />
+          }
+
+          { loadingMoreConversations && <ActivityIndicator size="large" color={theme.colors.primary} /> }
+        </Container>
+      </React.Fragment>
     )
   }
 };
 
-ConversationList = withChannelizeContext(ConversationList);
-
-const styles = {
-  container: {
-    position: 'absolute',
-    top: 0,
-    height: '100%',
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    flex:1,
-    flexDirection: 'column'
-  },
-  header: {
-    padding: 10,
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 1.00,
-    elevation: 1,
-  },
-  headerImage: {
-    justifyContent: 'center',
-    marginRight: 10
-  },
-  headerTitle: {
-    justifyContent: 'center',
-  },
-  headerTitleText: {
-    color: "#000",
-    textTransform: 'capitalize',
-  },
-  lastMessageText: {
-    color: "#b2b2b2",
-  },
-  titleText: {
-    color: "#000",
-    fontWeight: 'bold'
-  },
-};
+ConversationList = withChannelizeContext(
+ theme(ConversationList)
+);
 
 function mapStateToProps({ client, message, conversation }) {
   return {...conversation, ...client, userId: message.userId, conversation: message.conversation}

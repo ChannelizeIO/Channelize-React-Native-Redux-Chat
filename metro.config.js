@@ -4,6 +4,9 @@
  *
  * @format
  */
+let nodeLibs = require('node-libs-react-native');
+nodeLibs.fs = require.resolve('react-native-level-fs');
+nodeLibs.tls = require.resolve('node-libs-react-native/mock/tls');;
 
 module.exports = {
   transformer: {
@@ -13,5 +16,8 @@ module.exports = {
         inlineRequires: false,
       },
     }),
+  },
+  resolver: {
+    extraNodeModules: nodeLibs,
   },
 };

@@ -1,8 +1,22 @@
+import 'react-native-gesture-handler';
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 
-import { App, ConversationList, ConversationWindow, store } from './src';
-import { Channelize } from './channelize-websdk/dist/index';
+import { 
+  App,
+  ConversationList,
+  ConversationWindow,
+  ConversationDetails,
+  ContactList,
+  AddMembers,
+  store
+} from './src';
+import { Channelize } from 'channelize-chat';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+
+const isDev = typeof __DEV__ === 'boolean' && __DEV__
+process.env['NODE_ENV'] = isDev ? 'development' : 'production'
 
 if (process.env.NODE_ENV === 'development') {
   GLOBAL.XMLHttpRequest = GLOBAL.originalXMLHttpRequest || GLOBAL.XMLHttpRequest;
@@ -13,33 +27,184 @@ const PUBLIC_KEY; //Channelize.io public key
 const LOGGEDIN_USER_ID;//User id of loggedin user
 const CH_ACCESS_TOKEN; //Channelize access token of loggedin userid 
 
-export default class Example extends Component {
+class ConversationListScreen extends Component {
+  static navigationOptions = () => {
+    header: null
+  };
+
   constructor(props) {
     super(props);
-
-    this.state = {
-      conversation: null
-    }
   }
 
-  componentDidMount() {
-    console.log('app is launched');
+  onConversationSelect = (conversation) => {
+    this.props.navigation.navigate('ConversationWindow');
   }
 
-  componentWillUnmount() {
-    console.log('app is killed');
+  onSearchIconClick = () => {
+    this.props.navigation.navigate('ContactList');
   }
 
   render() {
     var client = new Channelize.client({publicKey: PUBLIC_KEY});
+    var theme = {
+      theme: 'light'
+    }
 
     return (
-      <Provider store={store}>
-        <App client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-          <ConversationList />
-          <ConversationWindow />
-        </App>
-      </Provider>
+      <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+        <ConversationList 
+          onSelect={this.onConversationSelect}
+          onSearchIconClick={this.onSearchIconClick}
+        />
+      </App>
     );
   }
+}
+
+class ConversationWindowScreen extends Component {
+  static navigationOptions = ({ navigation }) => {
+    header: null
+  };
+
+  constructor(props) {
+    super(props);
+  }
+
+  onConversationHeaderClick = (conversation) => {
+    this.props.navigation.navigate('ConversationDetails');
+  }
+
+  onBack = () => {
+    this.props.navigation.goBack();
+  }
+
+  render() {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+    var theme = {
+      theme: 'light'
+    }
+    return (
+      <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+        <ConversationWindow 
+          onBack={this.onBack}
+          onConversationHeaderClick={this.onConversationHeaderClick}
+        />
+      </App>
+    );
+  }
+}
+
+class ConversationDetailsScreen extends Component {
+  static navigationOptions = ({ navigation }) => {
+    header: null
+  };
+
+  constructor(props) {
+    super(props);
+  }
+
+  onAddMembersClick = () => {
+    this.props.navigation.navigate('AddMembers');
+  }
+
+  onBack = (conversation) => {
+    this.props.navigation.goBack();
+  }
+
+  render() {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+    var theme = {
+      theme: 'light'
+    }
+    return (
+      <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+        <ConversationDetails
+          onBack={this.onBack}
+          onAddMembersClick={this.onAddMembersClick} 
+        />
+      </App>
+    );
+  }
+}
+
+class ContactListScreen extends Component {
+  static navigationOptions = ({ navigation }) => {
+    header: null
+  };
+
+  constructor(props) {
+    super(props);
+  }
+
+  onBack = () => {
+    this.props.navigation.goBack();
+  }
+
+  onContactClick = () => {
+    this.props.navigation.navigate('ConversationWindow');
+  }
+
+  render() {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+    var theme = {
+      theme: 'light'
+    }
+    return (
+      <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+        <ContactList
+          onBack={this.onBack}
+          onContactClick={this.onContactClick} 
+        />
+      </App>
+    );
+  }
+}
+
+class AddMembersScreen extends Component {
+  static navigationOptions = ({ navigation }) => {
+    header: null
+  };
+
+  constructor(props) {
+    super(props);
+  }
+
+  onBack = () => {
+    this.props.navigation.goBack();
+  }
+
+  render() {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+    var theme = {
+      theme: 'light'
+    }
+    return (
+      <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+        <AddMembers
+          onBack={this.onBack} 
+        />
+      </App>
+    );
+  }
+}
+
+const Stack = createStackNavigator();
+
+export default function Example() {
+  return (
+    <Provider store={store}>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="ConversationList" 
+          screenOptions={{headerShown: false}}
+          >
+          <Stack.Screen name="ConversationList" component={ConversationListScreen} />
+          <Stack.Screen name="ConversationWindow" component={ConversationWindowScreen} />
+          <Stack.Screen name="ConversationDetails" component={ConversationDetailsScreen} />
+          <Stack.Screen name="ContactList" component={ContactListScreen} />
+          <Stack.Screen name="AddMembers" component={AddMembersScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
+  )
 }

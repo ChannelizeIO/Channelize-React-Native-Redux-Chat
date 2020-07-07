@@ -24,6 +24,7 @@ export function uniqueList(list) {
 
 export const modifyMessageList = (client, conversation, list) => {
   const user = client.getCurrentUser();
+
   // Find last message of logged-in user
   let lastMessage;
   for (let i = 0; i < list.length; i++) {
@@ -35,7 +36,6 @@ export const modifyMessageList = (client, conversation, list) => {
   }
 
   return list.map((message, i) => {
-  	
     //return message;
     message._id = message.id;
     message.text = message.body;
@@ -45,29 +45,55 @@ export const modifyMessageList = (client, conversation, list) => {
       message.text = 'This message was deleted'        
     }
 
-    // Determine if show read status
-    message.readByAll = null;
+    // Tick status
+    message.readByAll = conversation.readByAllMembers(message);
+    message.showPendingStatus = false;
+    message.showReceivedStatus = false;
     message.showReadStatus = false;
-    if (lastMessage && lastMessage.id == message.id) {
+    if (message.pending) {
+      message.showPendingStatus = true;
+    } else if (message.ownerId == user.id && !message.readByAll) {
+      message.showReceivedStatus = true;
+    } else if (lastMessage && lastMessage.id == message.id && message.readByAll) {
       message.showReadStatus = true;
-      message.readByAll = conversation.readByAllMembers(message);
+    }
+
+    // Handle created At
+    if(!('createdAt' in message)) {
+      message.createdAt = Date.now();
     }
 
     // Handle message owner
     if(message.owner) {
-      message.owner._id = message.owner.id;
-      message.owner.name = message.owner.displayName;
-      message.owner.avatar = message.owner.profileImageUrl;
+      message.owner._id = message.owner.id ||  message.owner._id;
+      message.owner.name = message.owner.displayName || message.owner.name;
+      message.owner.avatar = message.owner.profileImageUrl || message.owner.avatar;
       message.user = message.owner;
+    } else {
+      message.owner = {};
+      message.owner._id = user.id;
+      message.owner.name = user.displayName;
+      message.owner.avatar = user.profileImageUrl;
+      message.user = {
+        _id: user.id,
+        name: user.displayName,
+        avatar: user.profileImageUrl
+      };
     }
 
     const attachments = message.attachments;
-    if (attachments.length) {
+    if (attachments && attachments.length) {
       const attachment = attachments[0];
 
       // Handle image message
       if (attachment.type == 'image') {
-        message.image = attachment.thumbnailUrl;
+        if (attachment.thumbnailUrl) {
+          message.image = attachment.thumbnailUrl  
+        } else if (attachment.fileUrl) {
+          message.image = attachment.fileUrl  
+        } else {
+          message.image = attachment.uri;
+        }
       }
 
       // Handle gif & sticker message
@@ -163,6 +189,25 @@ export const getLastMessageString = (client, conversation) => {
 
   return lastMessageString;
 }
+
+export const typingString = (typing) => {
+  if (!typing.length) {
+    return null;
+  }
+
+  typing = typing.map(user => capitalize(user.displayName.split(' ')[0]));
+  if (typing.length == 1) {
+    return `${typing[0]} is typing...`;
+  } else if(typing.length == 2) {
+    const firstUser = typing[0];
+    const secondUser = typing[1];
+    return `${firstUser} and {secondUser} are typing...`;
+  } else if(typing.length > 2) {
+    const commaSeparatedUsers = typing.slice(0, -1).join(', ')
+    const lastuser = typing.slice(-1);
+    return `${commaSeparatedUsers} and {lastuser} are typing...`;
+  }
+} 
 
 export function dateTimeParser(time) {
   const today = new Date();

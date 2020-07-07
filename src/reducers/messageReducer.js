@@ -5,6 +5,9 @@ import {
   SENDING_MESSAGE,
   SEND_MESSAGE_FAIL,
   SEND_MESSAGE_SUCCESS,
+  SENDING_FILE,
+  SEND_FILE_FAIL,
+  SEND_FILE_SUCCESS,
   LOADING_LOAD_MORE_MESSAGES,
   LOAD_MORE_MESSAGES_SUCCESS,
   LOAD_MORE_MESSAGES_FAIL,
@@ -16,10 +19,13 @@ import {
   NEW_MESSAGE_RECEIVED_EVENT,
   USER_STATUS_UPDATED_EVENT,
   USER_UPDATED_EVENT,
-  MARK_AS_READ_EVENT
+  MARK_AS_READ_EVENT,
+  USER_BLOCKED_EVENT,
+  USER_UNBLOCKED_EVENT,
+  TYPING_EVENT
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
-import { Channelize } from '../../channelize-websdk/dist/index';
+import { Channelize } from 'channelize-chat';
 
 const INITIAL_STATE = {
   list: [],
@@ -27,6 +33,13 @@ const INITIAL_STATE = {
   error: null,
   loadingMoreMessage: false,
   allMessageLoaded: false,
+
+  //typing event
+  typing: [],
+
+  // typing
+  // Sending file
+  sendingFile: false,
 
   // Active conversation and userId
   conversation: null,
@@ -72,8 +85,8 @@ export const loadMoreMessagesSuccess = (state, action) => {
 
 export const sendingMessage = (state, action) => {
   state.sendingMessage = true;
-  // state.list = [...[action.payload], ...state.list];
-  // state.list = uniqueList(state.list);
+  state.list = [...[action.payload], ...state.list];
+  state.list = uniqueList(state.list);
 };
 
 export const sendMessageSuccess = (state, action) => {
@@ -85,6 +98,24 @@ export const sendMessageSuccess = (state, action) => {
 export const sendMessageFail = (state, action) => {
   state.sendingMessage = false;
   state.error = action.payload;
+};
+
+export const sendingFile = (state, action) => {
+  state.sendingFile = true;
+  state.list = [...[action.payload], ...state.list];
+  state.list = uniqueList(state.list);
+};
+
+export const sendFileSuccess = (state, action) => {
+  state.sendingFile = false;
+  state.list = [...[action.payload], ...state.list];
+  state.list = uniqueList(state.list);
+};
+
+export const sendFileFail = (state, action) => {
+  state.sendingFile = false;
+  state.list = [...[action.payload], ...state.list];
+  state.list = uniqueList(state.list);
 };
 
 export const setActiveConversation = (state, action) => {
@@ -116,7 +147,8 @@ export const conversationUpdated = (state, action) => {
     let conversation = {...jsonConversaton, title, profileImageUrl, updatedAt: action.payload.timestamp};
 
     //Convert in conversation model
-    state.conversation = new Channelize.core.Conversation.Model(conversation);
+    const client = Channelize.client.getInstance();
+    state.conversation = new Channelize.core.Conversation.Model(client, conversation);
   }
 };
 
@@ -129,7 +161,8 @@ export const membersAdded = (state, action) => {
     jsonConversaton.updatedAt = timestamp;
 
     //Convert in conversation model
-    state.conversation = new Channelize.core.Conversation.Model(jsonConversaton);
+    const client = Channelize.client.getInstance();
+    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversaton);
   }
 }
 
@@ -149,7 +182,8 @@ export const membersRemoved = (state, action) => {
     })
 
     //Convert in conversation model
-    state.conversation = new Channelize.core.Conversation.Model(jsonConversaton);
+    const client = Channelize.client.getInstance();
+    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversaton);
   }
 }
 
@@ -161,7 +195,8 @@ export const userStatusUpdated = (state, action) => {
     jsonConversaton.user.lastSeen = user.lastSeen;
 
     //Convert in conversation model
-    state.conversation = new Channelize.core.Conversation.Model(jsonConversaton);
+    const client = Channelize.client.getInstance();
+    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversaton);
   }
 };
 
@@ -175,7 +210,8 @@ export const userUpdated = (state, action) => {
     jsonConversaton.user.profileImageUrl = user.profileImageUrl;
 
     //Convert in conversation model
-    state.conversation = new Channelize.core.Conversation.Model(jsonConversaton);
+    const client = Channelize.client.getInstance();
+    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversaton);
   }
 };
 
@@ -189,9 +225,70 @@ export const markAsRead = (state, action) => {
     }
 
     //Convert in conversation model
-    state.conversation = new Channelize.core.Conversation.Model(jsonConversaton);
+    const client = Channelize.client.getInstance();
+    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversaton);
   }
 }
+
+export const userBlocked = (state, action) => {
+  let { blocker, blockee } = action.payload;
+
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.isGroup) {
+    return
+  }
+
+  // If the current user is blocker
+  // Or if current user is blocking another user
+  const client = Channelize.client.getInstance();
+  const user = client.getCurrentUser();
+  if (user.id == blocker.id) {
+    jsonConversation = activeConversation.toJSON();
+    jsonConversation.isActive = false;
+
+    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+  }
+};
+
+export const userUnblocked = (state, action) => {
+  let { unblocker, unblockee } = action.payload;
+
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.isGroup) {
+    return
+  }
+
+  // If the current user is unblocker
+  // Or if current user is unblocking another user
+  const client = Channelize.client.getInstance();
+  const user = client.getCurrentUser();
+  if (user.id == unblocker.id) {
+    jsonConversation = activeConversation.toJSON();
+    jsonConversation.isActive = true;
+
+    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+  }
+};
+
+export const typingEvent = (state, action) => {
+  const { conversation, isTyping, user} = action.payload;
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  const index = state.typing.findIndex(item => item.id == user.id);
+  // If isTyping true, push user in  typing array
+  if (isTyping && index < 0) {
+    state.typing.push(user);
+    return
+  }
+
+  // If isTyping false, remove user from typing array
+  if (!isTyping && index >= 0) {
+    state.typing.splice(index, 1);
+  }
+};
 
 export const handlers = {
   [LOADING_MESSAGE_LIST]: loadingMessageList,
@@ -200,6 +297,9 @@ export const handlers = {
   [SENDING_MESSAGE]: sendingMessage,
   [SEND_MESSAGE_SUCCESS]: sendMessageSuccess,
   [SEND_MESSAGE_FAIL]: sendMessageFail,
+  [SENDING_FILE]: sendingFile,
+  [SEND_FILE_FAIL]: sendFileFail,
+  [SEND_FILE_SUCCESS]: sendFileSuccess,
   [LOADING_LOAD_MORE_MESSAGES]: loadingLoadMoreMessages,
   [LOAD_MORE_MESSAGES_SUCCESS]: loadMoreMessagesSuccess,
   [LOAD_MORE_MESSAGES_FAIL]: loadMoreMessagesFail,
@@ -211,7 +311,10 @@ export const handlers = {
   [NEW_MESSAGE_RECEIVED_EVENT]: newMessageReceived,
   [USER_STATUS_UPDATED_EVENT]: userStatusUpdated,
   [USER_UPDATED_EVENT]: userUpdated,
-  [MARK_AS_READ_EVENT]: markAsRead
+  [MARK_AS_READ_EVENT]: markAsRead,
+  [USER_BLOCKED_EVENT]: userBlocked,
+  [USER_UNBLOCKED_EVENT]: userUnblocked,
+  [TYPING_EVENT]: typingEvent
 };
 
 export default createReducer(INITIAL_STATE, handlers);
