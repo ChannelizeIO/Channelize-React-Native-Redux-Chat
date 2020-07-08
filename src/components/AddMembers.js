@@ -27,8 +27,8 @@ const Container = styled.ScrollView`
 `;
 
 const Header = styled.View`
-  padding: 10px;
   flex-direction: row;
+  background-color: ${props => props.theme.addMembers.backgroundColor };
   align-items: center;
   justify-content: center;
 `;
@@ -39,7 +39,7 @@ const ContactsContainer = styled.View`
 `;
 
 const HeaderBackIcon = styled.View`
-  margin-right: 10px;
+  margin-right: 15px;
 `;
 
 const HeaderTitle = styled.View`
@@ -58,13 +58,6 @@ const HeaderIcons = styled.View`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-`;
-
-const HeaderCloseIcon = styled.View`
-`;
-
-const InputView = styled.View`
-  flex-grow: 8;
 `;
 
 const SelectedMembersContainer = styled.View`
@@ -93,7 +86,7 @@ class AddMembers extends PureComponent {
 
     this.state = {
       search: '',
-      showSearchInput: false,
+      showSearchBar: false,
       selectedMembers: []
     }
 
@@ -121,8 +114,11 @@ class AddMembers extends PureComponent {
   }
 
   _init = () => {
-    const { client, list } = this.props;
+    let { client, list, conversation } = this.props;
 
+    if (!list.length) {
+      list = conversation.members;
+    }
     const skipUserIds = list.map(user => user.userId);
 
     // Load friends list
@@ -148,25 +144,11 @@ class AddMembers extends PureComponent {
         leftAvatar={this._getContactAvatar(member)}
         title={this._renderDisplayName(member)}
         titleStyle={{ fontWeight: '500', fontSize: 16 }}
-        checkBox={{checked: checked >= 0 ? true : false}}
+        checkBox={{checked: checked >= 0 ? true : false, onPress: () => this._onContactPress(member)}}
         onPress={() => this._onContactPress(member)}
       />
     );
   };
-
-  _renderCheckbox = (user) => {
-    let { selectedMembers } = this.state;
-    const checked = selectedMembers.findIndex(item => item.id == user.id)
-
-    return (
-      <CheckBox
-        right
-        checkedIcon='dot-circle-o'
-        uncheckedIcon='circle-o'
-        checked={checked >= 0 ? true : false}
-      />
-    )
-  }
 
   _getContactAvatar = user => {
     const { theme } = this.props;
@@ -188,6 +170,7 @@ class AddMembers extends PureComponent {
     if (showOnlineAccessory) {
       return (
         <Avatar 
+          size="medium"
           title={avatarTitle}
           source={avatarUrl}
           accessory={{
@@ -206,6 +189,7 @@ class AddMembers extends PureComponent {
 
     return (
       <Avatar 
+        size="medium"
         title={avatarTitle}
         source={avatarUrl}
       />)
@@ -243,8 +227,9 @@ class AddMembers extends PureComponent {
     }
 
     return (
-      <TouchableOpacity style={{marginRight: 15}} onPress={this._removeFromSelectedMembers}>   
+      <TouchableOpacity style={{marginRight: 15}} onPress={() => this._removeFromSelectedMembers(user)}>   
         <Avatar 
+          size="medium"
           title={avatarTitle}
           source={avatarUrl}
           accessory={{
@@ -260,10 +245,10 @@ class AddMembers extends PureComponent {
 
   back = () => {
     const { onBack } = this.props;
-    const { showSearchInput } = this.state;
+    const { showSearchBar } = this.state;
 
-    if (showSearchInput) {
-      this.setState({showSearchInput: false})
+    if (showSearchBar) {
+      this.setState({showSearchBar: false})
       return
     }
 
@@ -320,9 +305,9 @@ class AddMembers extends PureComponent {
   }
 
   _toggleSearchInput = () => {
-    const { showSearchInput } = this.state;
+    const { showSearchBar } = this.state;
     this.setState(state => ({
-      showSearchInput: !state.showSearchInput
+      showSearchBar: !state.showSearchBar
     }))
   }
 
@@ -349,7 +334,7 @@ class AddMembers extends PureComponent {
       connected,
       connecting
     } = this.props;
-    const { search, selectedMembers, showSearchInput } = this.state;
+    const { search, selectedMembers, showSearchBar } = this.state;
 
     if (connecting) {
       return null;
@@ -368,14 +353,23 @@ class AddMembers extends PureComponent {
     }
 
     const user = client.getCurrentUser();
+
+    let headerStyle = {
+      shadowColor: "#000",
+      shadowOpacity: 0.18,
+      shadowRadius: 1.00,
+      elevation: 1
+    }
+
+    if (!showSearchBar) {
+      headerStyle['padding'] = 10;
+    } else {
+      headerStyle['paddingLeft'] = 10;
+    }
+
     return (
       <Container>
-        <Header style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.18,
-            shadowRadius: 1.00,
-            elevation: 1
-          }}>
+        <Header style={headerStyle}>
           <HeaderBackIcon>
             <TouchableOpacity onPress={this.back}>
               <Icon 
@@ -385,7 +379,7 @@ class AddMembers extends PureComponent {
               />
             </TouchableOpacity>
           </HeaderBackIcon>
-          { !showSearchInput && 
+          { !showSearchBar && 
             <React.Fragment>
               <HeaderTitle>
                 <HeaderTitleText>Add Members</HeaderTitleText>
@@ -412,7 +406,7 @@ class AddMembers extends PureComponent {
               </HeaderIcons>
             </React.Fragment>
           }
-          { showSearchInput &&
+          { showSearchBar &&
             <SearchBar
               containerStyle={{width: "90%"}}
               placeholder="Search"
@@ -436,6 +430,7 @@ class AddMembers extends PureComponent {
           <FlatList
             renderItem={this._renderSelectedContact}
             data={selectedMembers}
+            showsHorizontalScrollIndicator={false}
             horizontal={true}
             extraData={true}
             keyExtractor={(item, index) => item.id}

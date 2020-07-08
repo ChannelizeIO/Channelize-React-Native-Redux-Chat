@@ -232,6 +232,7 @@ class ConversationList extends PureComponent {
     if (showOnlineAccessory) {
       return (
         <Avatar 
+          size="medium"
           title={avatarTitle}
           source={avatarUrl}
           accessory={{
@@ -250,6 +251,7 @@ class ConversationList extends PureComponent {
 
     return (
       <Avatar 
+        size="medium"
         title={avatarTitle}
         source={avatarUrl}
       />)

@@ -240,12 +240,16 @@ class ConversationWindow extends PureComponent {
 
   _startTyping = () => {
     const { conversation } = this.props;
-    conversation.startTyping();
+    if (conversation) {
+      conversation.startTyping();
+    }
   }
 
   _stopTyping = () => {
     const { conversation } = this.props;
-    conversation.stopTyping();
+    if (conversation) {
+      conversation.stopTyping();
+    }
   }
 
   _toggleComposerActions = () => {

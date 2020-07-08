@@ -27,8 +27,9 @@ const Container = styled.ScrollView`
 `;
 
 const Header = styled.View`
-  padding: 10px;
+  padding-left: 10px;
   flex-direction: row;
+  background-color: ${props => props.theme.contactList.backgroundColor };
   align-items: center;
   justify-content: center;
 `;
@@ -47,6 +48,7 @@ const SuggestedText = styled.Text`
   text-transform: capitalize;
   padding-left: 15px;
   padding-bottom: 15px;
+  padding-top: 15px;
 `;
 
 const ContactDisplayNameText = styled.Text`
@@ -132,6 +134,7 @@ class ContactList extends PureComponent {
     if (showOnlineAccessory) {
       return (
         <Avatar 
+          size="medium"
           title={avatarTitle}
           source={avatarUrl}
           accessory={{
@@ -150,6 +153,7 @@ class ContactList extends PureComponent {
 
     return (
       <Avatar 
+        size="medium"
         title={avatarTitle}
         source={avatarUrl}
       />)
@@ -244,7 +248,12 @@ class ContactList extends PureComponent {
     const user = client.getCurrentUser();
     return (
       <Container>
-        <Header>
+        <Header style={{
+            shadowColor: "#000",
+            shadowOpacity: 0.18,
+            shadowRadius: 1.00,
+            elevation: 1
+          }}>
           <HeaderBackIcon>
             <TouchableOpacity onPress={this.back}>
               <Icon 

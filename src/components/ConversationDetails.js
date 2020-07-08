@@ -291,7 +291,6 @@ class ConversationDetails extends PureComponent {
 
   _onMemberPress = member => {
     console.log("_onMemberPress");
-    //this.props.setActiveUserId(member.user.id);
   }
 
   render() {
@@ -309,8 +308,13 @@ class ConversationDetails extends PureComponent {
     if (connecting) {
       return null;
     }
+
     if (!conversation) {
       return null;
+    }
+
+    if (!list.length) {
+      list = conversation.members;
     }
 
     if (error) {
