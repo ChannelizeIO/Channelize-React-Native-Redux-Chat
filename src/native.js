@@ -1,34 +1,31 @@
 import ImagePicker from 'react-native-image-picker';
 import RNFetchBlob from 'rn-fetch-blob'
 
-// export const nativeFunctions = {
-export const pickImage = function(cb) {
-  	// new Promise((resolve, reject) => {
-      ImagePicker.launchImageLibrary({}, (response) => {
-  	  	console.log('Response = ', response);
-  	  	if (response.error) {
-	      console.log('ImagePicker Error: ', response.error);
-          return cb(response.error);
-      	} 
+export const pickImage = function(cb, mediaType='photo') {
+  ImagePicker.launchImageLibrary({mediaType: mediaType}, (response) => {
+  	console.log('Response = ', response);
+  	if (response.error) {
+      console.log('ImagePicker Error: ', response.error);
+      return cb(response.error);
+  	} 
 
-      	if (response.didCancel) {
-	        console.log('User cancelled image picker');
-      	}
+  	if (response.didCancel) {
+      console.log('User cancelled image picker');
+  	}
 
-        // Checking the platform and change the uri if needed
-        if (Platform.OS === 'android') {
-          response.uri = 'file://' + response.path;
-        }
+    // Checking the platform and change the uri if needed
+    if (Platform.OS === 'android') {
+      response.uri = 'file://' + response.path;
+    }
 
-       	return cb(null, {
-       	  didCancel: response.didCancel,
-          uri: response.uri,
-          name: response.fileName,
-          type: response.type,
-          path: response.path
-        })
-	  });
-	// })
+   	return cb(null, {
+   	  didCancel: response.didCancel,
+      uri: response.uri,
+      name: response.fileName,
+      type: response.type,
+      path: response.path
+    })
+  });
 }
 
 export const uploadFile = async function(client, file, type) {
@@ -51,5 +48,4 @@ export const uploadFile = async function(client, file, type) {
 		    return reject(err);
   	  	})
   	});
-  }
-// }
+}

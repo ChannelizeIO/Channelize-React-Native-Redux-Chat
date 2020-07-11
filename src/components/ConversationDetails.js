@@ -376,6 +376,9 @@ class ConversationDetails extends PureComponent {
                 value={title}
                 autoFocus={true}
                 onChangeText={this._onChangeTitle}
+                inputStyle={{
+                  color: theme.createGroup.input.color
+                }}
                 rightIcon={
                  <TouchableOpacity onPress={this._updateTitle}>
                   <Icon 

@@ -5,3 +5,4 @@ export ConversationWindow from './ConversationWindow';
 export ConversationDetails from './ConversationDetails';
 export ContactList from './ContactList';
 export AddMembers from './AddMembers';
+export CreateGroup from './CreateGroup';

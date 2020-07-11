@@ -163,6 +163,13 @@ class ConversationList extends PureComponent {
     }
   }
 
+  _onAddIconClick = () => {
+    const { onAddIconClick } = this.props;
+    if (onAddIconClick && typeof onAddIconClick == 'function') {
+      onAddIconClick()
+    }
+  }
+
   _renderTitle = conversation => {
     let title;
     if (conversation.isGroup) {
@@ -270,7 +277,7 @@ class ConversationList extends PureComponent {
   };
 
   render() {
-    let { theme, userId, conversation, client, connected, connecting, list, loading, error, loadingMoreConversations } = this.props;
+    let { theme, client, connected, connecting, list, loading, error, loadingMoreConversations } = this.props;
 
     if (connecting) {
       return null;
@@ -278,11 +285,6 @@ class ConversationList extends PureComponent {
 
     const user = client.getCurrentUser();
     if (!user) {
-      return null;
-    }
-
-    // if any active userId or conversation exist, then return true 
-    if (userId || conversation) {
       return null;
     }
 
@@ -326,7 +328,14 @@ class ConversationList extends PureComponent {
               <HeaderTitleText h3>{headetTitle}</HeaderTitleText>
             </HeaderTitle>
             <HeaderIcons>
-              <TouchableOpacity onPress={this._onSearchIconClick}>
+              <TouchableOpacity onPress={this._onAddIconClick}>
+                <Icon 
+                  name ="ios-add" 
+                  size={30} 
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={{marginLeft: 15}} onPress={this._onSearchIconClick}>
                 <Icon 
                   name ="ios-search" 
                   size={30} 
@@ -370,8 +379,8 @@ ConversationList = withChannelizeContext(
  theme(ConversationList)
 );
 
-function mapStateToProps({ client, message, conversation }) {
-  return {...conversation, ...client, userId: message.userId, conversation: message.conversation}
+function mapStateToProps({ client, conversation }) {
+  return {...conversation, ...client}
 }
 
 export default connect(

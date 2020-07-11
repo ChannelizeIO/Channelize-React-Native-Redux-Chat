@@ -1,4 +1,6 @@
 import {produce, setAutoFreeze} from "immer"
+import CONFIG from '../config'
+
 setAutoFreeze(false);
 
 export function createReducer(initialState, actionsMap) {
@@ -103,13 +105,22 @@ export const modifyMessageList = (client, conversation, list) => {
 
       // Handle location message
       if (attachment.type == 'location') {
+        const imagePreviewUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${
+          attachment.latitude
+          },${
+          attachment.longitude
+          }&zoom=15&size=200x200&maptype=roadmap&markers=color:red%7Clabel:A%7C${
+          attachment.latitude
+          },${attachment.longitude}&key=${CONFIG.GOOGLE_MAP_API_KEY}`;
+        message.image = imagePreviewUrl
         message.text = attachment.address;
       }
 
       // Handle video message
       if (attachment.type == 'video') {
-        message.video = attachment.fileUrl;
+        message.video = attachment.name;
         message.videoProps = {
+         fileUrl: attachment.fileUrl,
          poster: attachment.thumbnailUrl,
          posterResizeMode: 'cover',
          resizeMode: 'cover',

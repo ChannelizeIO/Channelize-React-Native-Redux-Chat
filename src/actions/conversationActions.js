@@ -2,6 +2,9 @@ import {
   LOADING_CONVERSATION_LIST,
   CONVERSATION_LIST_FAIL,
   CONVERSATION_LIST_SUCCESS,
+  CREATING_CONVERSATION,
+  CREATE_CONVERSATION_FAIL,
+  CREATE_CONVERSATION_SUCCESS,
   LOADING_LOAD_MORE_CONVERSATIONS,
   LOAD_MORE_CONVERSATIONS_FAIL,
   LOAD_MORE_CONVERSATIONS_SUCCESS,
@@ -22,14 +25,53 @@ import {
   UPDATE_TITLE_SUCCESS
 } from '../constants';
 
+import { uploadFile } from '../native';
+
+export const createConversation = (client, body) => {
+  return async dispatch => {
+    dispatch({
+      type: CREATING_CONVERSATION,
+      payload: {}
+    });
+    try {
+      if (body.profileImageUrl) {
+        const fileData = await uploadFile(client, body.profileImageUrl, 'image');
+        body.profileImageUrl = fileData['fileUrl'];
+      }
+
+      return client.Conversation.createConversation(body, (error, response) => {
+        if (error) {
+          dispatch({
+            type: CREATE_CONVERSATION_FAIL,
+            payload: error
+          });
+          return;
+        }
+        dispatch({
+          type: CREATE_CONVERSATION_SUCCESS,
+          payload: response
+        }); 
+      })
+    } catch(err) {
+      if (err) {
+        dispatch({
+          type: CREATE_CONVERSATION_FAIL,
+          payload: err
+        });
+        return;
+      }
+    }
+  };
+};
+
 export const getConversationList = (conversationListQuery) => {
   return dispatch => {
     dispatch({
       type: LOADING_CONVERSATION_LIST,
       payload: {}
     });
-    return conversationListQuery.list((err, response) => {
-      if (err) {
+    return conversationListQuery.list((error, response) => {
+      if (error) {
         dispatch({
           type: CONVERSATION_LIST_FAIL,
           payload: error

@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import { Platform, View, Image, TouchableOpacity, Text, Linking, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { uuid } from 'uuidv4';
-
+import { lookup } from 'mime-types';
 import {
   getMessageList,
   sendMessageToConversation,
@@ -91,6 +91,12 @@ const TypingView = styled.View`
 
 const TypingText = styled.Text`
   color: ${props => props.theme.colors.textGrey };
+`;
+
+const VideoMessageView = styled.View`
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
 `;
 
 class ConversationWindow extends PureComponent {
@@ -269,16 +275,56 @@ class ConversationWindow extends PureComponent {
         return;
       }
 
+      file.name = file.name ? file.name : file.path.split('/').pop();
+      file.type = lookup(file.name);
+      let fileType = file.type.split('/').shift();
+      if (! ['image', 'video', 'audio'].includes(fileType) ) {
+        console.log("Invalid file type");
+        return
+      }
+
       const body = {
         id: uuid(),
         pending: true,
         attachments: [{
-          type: 'image',
+          type: fileType,
           thumbnailUrl: file.uri
         }],
       }
-      this.props.sendFileToConversation(client, conversation, file, body);
+      this.props.sendFileToConversation(client, conversation, file, body, fileType);
     })
+  }
+
+  sendVideo = () => {
+    const { client, conversation, connected } = this.props;
+    if (!connected) {
+      return
+    }
+
+    pickImage((err, file) => {
+      if (err || !file || file.didCancel) {
+        return;
+      }
+
+      file.name = file.name ? file.name : file.path.split('/').pop();
+      file.type = lookup(file.name);
+      let fileType = file.type.split('/').shift();
+      if (! ['image', 'video', 'audio'].includes(fileType) ) {
+        console.log("Invalid file type");
+        return
+      }
+
+      const body = {
+        id: uuid(),
+        pending: true,
+        attachments: [{
+          type: fileType,
+          name: file.name,
+          fileUrl: file.uri
+        }],
+      }
+      this.props.sendFileToConversation(client, conversation, file, body, fileType);
+    }, 'video')
   }
 
   sendMessage(messages) {
@@ -361,6 +407,7 @@ class ConversationWindow extends PureComponent {
     if (!conversation) {
       conversation = dummyConversation
       list = [];
+      loading = true;
     }
 
     if (error) {
@@ -451,10 +498,6 @@ class ConversationWindow extends PureComponent {
               )
             }}
             renderLoading={() => {
-              if (!loading || !conversation) {
-                return null;
-              }
-
               return (
                 <ActivityIndicator size="large" color={theme.colors.primary} />
               )
@@ -483,13 +526,23 @@ class ConversationWindow extends PureComponent {
             }}
             renderActions={() => {
               return (
-                <TouchableOpacity style={{marginLeft: 10, marginBottom: 10}}onPress={this.sendImage}>
-                  <Icon 
-                    name ="ios-image" 
-                    size={20} 
-                    color={theme.colors.primary}
-                  />
-                </TouchableOpacity>
+                <React.Fragment>
+                  <TouchableOpacity style={{marginLeft: 10, marginBottom: 10}} onPress={this.sendImage}>
+                    <Icon 
+                      name ="ios-image" 
+                      size={20} 
+                      color={theme.colors.primary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={{marginLeft: 10, marginBottom: 10}} onPress={this.sendVideo}>
+                    <Icon 
+                      name ="ios-videocam" 
+                      size={20} 
+                      color={theme.colors.primary}
+                    />
+                  </TouchableOpacity>
+                </React.Fragment>
               )
             }}
             renderChatEmpty={() => {
@@ -502,23 +555,32 @@ class ConversationWindow extends PureComponent {
               )
             }}
             renderMessageVideo={(message) => {
+              const userMessage = message.currentMessage.user._id == user.id;
+              const textStyle = {
+                marginLeft: 5,
+                color: userMessage ? theme.colors.textLight : theme.colors.textDark
+              }
               return (
-                <View>
-                  <Text> Shared a Video: </Text>
-                  <Text 
-                    style={{textDecorationLine: 'underline'}}
-                    onPress={() => {
-                      const url = message.currentMessage.video;
+                  <TouchableOpacity onPress={() => {
+                      const url = message.currentMessage.videoProps.fileUrl;
                       Linking.canOpenURL(url).then(supported => {
-                          if (!supported) {
-                              console.error('No handler for URL:', url);
-                          }
-                          else {
-                              Linking.openURL(url);
-                          }
-                        })
-                      }}> {message.currentMessage.video} </Text>
-                </View>
+                        if (!supported) {
+                          console.error('No handler for URL:', url);
+                        }
+                        else {
+                          Linking.openURL(url);
+                        }
+                      })
+                    }}>
+                  <VideoMessageView>
+                    <Icon
+                      name ="ios-videocam" 
+                      size={20} 
+                      color={theme.colors.textGrey}
+                    />
+                    <Text style={textStyle}> {message.currentMessage.video} </Text>
+                  </VideoMessageView>
+                </TouchableOpacity>
               )
             }}
           />

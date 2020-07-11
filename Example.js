@@ -9,6 +9,7 @@ import {
   ConversationDetails,
   ContactList,
   AddMembers,
+  CreateGroup,
   store
 } from './src';
 import { Channelize } from 'channelize-chat';
@@ -44,6 +45,10 @@ class ConversationListScreen extends Component {
     this.props.navigation.navigate('ContactList');
   }
 
+  onAddIconClick = () => {
+    this.props.navigation.navigate('CreateGroup');
+  }
+
   render() {
     var client = new Channelize.client({publicKey: PUBLIC_KEY});
     var theme = {
@@ -55,6 +60,7 @@ class ConversationListScreen extends Component {
         <ConversationList 
           onSelect={this.onConversationSelect}
           onSearchIconClick={this.onSearchIconClick}
+          onAddIconClick={this.onAddIconClick}
         />
       </App>
     );
@@ -188,6 +194,39 @@ class AddMembersScreen extends Component {
   }
 }
 
+class CreateGroupScreen extends Component {
+  static navigationOptions = ({ navigation }) => {
+    header: null
+  };
+
+  constructor(props) {
+    super(props);
+  }
+
+  onBack = () => {
+    this.props.navigation.goBack();
+  }
+
+  onCreateSuccess = () => {
+    this.props.navigation.navigate('ConversationWindow') 
+  }
+
+  render() {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+    var theme = {
+      theme: 'light'
+    }
+    return (
+      <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+        <CreateGroup
+          onBack={this.onBack}
+          onCreateSuccess={this.onCreateSuccess} 
+        />
+      </App>
+    );
+  }
+}
+
 const Stack = createStackNavigator();
 
 export default function Example() {
@@ -203,6 +242,7 @@ export default function Example() {
           <Stack.Screen name="ConversationDetails" component={ConversationDetailsScreen} />
           <Stack.Screen name="ContactList" component={ContactListScreen} />
           <Stack.Screen name="AddMembers" component={AddMembersScreen} />
+          <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

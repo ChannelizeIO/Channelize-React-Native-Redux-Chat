@@ -2,9 +2,13 @@ import {
   LOADING_CONVERSATION_LIST,
   CONVERSATION_LIST_FAIL,
   CONVERSATION_LIST_SUCCESS,
+  CREATING_CONVERSATION,
+  CREATE_CONVERSATION_FAIL,
+  CREATE_CONVERSATION_SUCCESS,
   LOADING_LOAD_MORE_CONVERSATIONS,
   LOAD_MORE_CONVERSATIONS_FAIL,
   LOAD_MORE_CONVERSATIONS_SUCCESS,
+  // LIST_MEMBERS_SUCCESS
   USER_STATUS_UPDATED_EVENT,
   NEW_MESSAGE_RECEIVED_EVENT,
   USER_JOINED_EVENT,
@@ -13,8 +17,11 @@ import {
   CONVERSATION_UPDATED_EVENT,
   USER_UPDATED_EVENT,
   MARK_AS_READ_EVENT,
+  USER_BLOCKED_EVENT,
+  USER_UNBLOCKED_EVENT,
   TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT,
-  LIST_MEMBERS_SUCCESS
+  USER_REMOVED_EVENT,
+  USER_CONVERSATION_DELETED_EVENT,
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
 
@@ -23,7 +30,11 @@ const INITIAL_STATE = {
   loading: false,
   loadingMoreConversations: false,
   allConversationsLoaded: false,
-  error: null
+  error: null,
+
+  // create Group
+  creatingConversation: false,
+  latestCreatedConversation: null
 };
 
 export const loadingConversationList = (state, action) => {
@@ -37,6 +48,21 @@ export const listConversationSuccess = (state, action) => {
 
 export const listConversationFail = (state, action) => {
   state.loading = false;
+  state.error = action.payload;
+};
+
+export const creatingConversation = (state, action) => {
+  state.creatingConversation = true;
+  state.latestCreatedConversation = null;
+};
+
+export const createConversationSuccess = (state, action) => {
+  state.creatingConversation = false;
+  state.latestCreatedConversation = action.payload
+};
+
+export const createConversationFail = (state, action) => {
+  state.creatingConversation = false;
   state.error = action.payload;
 };
 
@@ -264,6 +290,112 @@ export const totalUnreadMessageCountUpdatedEvent = (state, action) => {
   state.list = finalList;
 }
 
+export const userBlocked = (state, action) => {
+  let { blocker, blockee } = action.payload;
+
+  // If the current user is blocker
+  // Or if current user is blocking another user
+  const client = Channelize.client.getInstance();
+  const user = client.getCurrentUser();
+  if ([blocker.id, blockee.id].indexOf(user.id) < 0) {
+    return
+  }
+  
+  const conversation = state.list.find(item => !item.isGroup && [blocker.id, blockee.id].indexOf(item.user.id) >= 0)
+  if (!conversation) {
+    return
+  }
+
+  const finalList = state.list.map((item, index) => {
+    if (item.id == conversation.id) {
+      if (user.id == blocker.id) {
+        item.isActive = false;
+      } else {
+        item.user.isActive = false;
+      }
+
+      return item;
+    } else {
+      return item;
+    }
+  })
+
+  state.list = finalList;
+};
+
+export const userUnblocked = (state, action) => {
+  let { unblocker, unblockee } = action.payload;
+
+  // If the current user is blocker
+  // Or if current user is blocking another user
+  const client = Channelize.client.getInstance();
+  const user = client.getCurrentUser();
+  if ([unblocker.id, unblockee.id].indexOf(user.id) < 0) {
+    return
+  }
+  
+  const conversation = state.list.find(item => !item.isGroup && [unblocker.id, unblockee.id].indexOf(item.user.id) >= 0)
+  if (!conversation) {
+    return
+  }
+
+  const finalList = state.list.map((item, index) => {
+    if (item.id == conversation.id) {
+      if (user.id == unblocker.id) {
+        item.isActive = true;
+      } else {
+        item.user.isActive = true;
+      }
+
+      return item;
+    } else {
+      return item;
+    }
+  })
+
+  state.list = finalList;
+};
+
+export const userRemoved = (state, action) => {
+  let { conversation } = action.payload;
+
+  const finalList = state.list.map((item, index) => {
+    if (item.id == conversation.id) {
+      item.isActive = false;
+
+      return item;
+    } else {
+      return item;
+    }
+  })
+
+  state.list = finalList
+};
+
+export const conversationDeleted = (state, action) => {
+  let { conversation } = action.payload;
+
+  let conversationIndex;
+  const finalList = state.list.map((item, index) => {
+    if (item.id == conversation.id) {
+      item.isDeleted = true;
+
+      conversationIndex = index;
+
+      return item;
+    } else {
+      return item;
+    }
+  })
+
+  // Delete the conversation
+  if (conversationIndex >= 0) {
+    finalList.splice(conversationIndex, 1);
+  }
+
+  state.list = finalList
+};
+
 // export const listMembersSuccess = (state, action) => {
 //   let { conversation, members, timestamp } = action.payload;
 
@@ -298,6 +430,9 @@ export const handlers = {
   [LOADING_CONVERSATION_LIST]: loadingConversationList,
   [CONVERSATION_LIST_FAIL]: listConversationFail,
   [CONVERSATION_LIST_SUCCESS]: listConversationSuccess,
+  [CREATING_CONVERSATION]: creatingConversation,
+  [CREATE_CONVERSATION_FAIL]: createConversationFail,
+  [CREATE_CONVERSATION_SUCCESS]: createConversationSuccess,
   [LOADING_LOAD_MORE_CONVERSATIONS]: loadingLoadMoreConversations,
   [LOAD_MORE_CONVERSATIONS_FAIL]: loadMoreConversationsFail,
   [LOAD_MORE_CONVERSATIONS_SUCCESS]: loadMoreConversationsSuccess,
@@ -312,6 +447,10 @@ export const handlers = {
   [TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT]: totalUnreadMessageCountUpdatedEvent,
   // [LIST_MEMBERS_SUCCESS]: listMembersSuccess,
   [MARK_AS_READ_EVENT]: markAsRead,
+  [USER_BLOCKED_EVENT]: userBlocked,
+  [USER_UNBLOCKED_EVENT]: userUnblocked,
+  [USER_REMOVED_EVENT]: userRemoved,
+  [USER_CONVERSATION_DELETED_EVENT]: conversationDeleted,
 };
 
 export default createReducer(INITIAL_STATE, handlers);

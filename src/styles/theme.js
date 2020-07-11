@@ -6,6 +6,7 @@ export const Colors = {
   primary: '#0084ff',
   secondary: '#111',
   danger: '#ff0000',
+  disabled: '#D1D5D8',
   textLight: '#FFFFFF',
   textDark: '#000',
   textGrey: '#b2b2b2',
@@ -63,6 +64,9 @@ export const lightTheme = {
   	details: {
   	  titleColor: Colors.textDark
   	},
+    input: {
+      color: Colors.textDark
+    },
   	member: {
   	  backgroundColor: Colors.backgroundLightColor,
   	  displayNameColor: Colors.textDark,
@@ -80,13 +84,39 @@ export const lightTheme = {
   contactList: {
   	backgroundColor: Colors.backgroundLightColor,
   	header: {},
+    searchBar: {
+      inputTextColor: Colors.textDark,
+      backgroundColor: Colors.backgroundLightColor,
+    },
   	user: {
   	  displayNameColor: Colors.textDark
   	}
   },
   addMembers: {
     backgroundColor: Colors.backgroundLightColor,
-    header: {},
+    header: {
+      titleColor: Colors.textDark,
+    },
+    searchBar: {
+      inputTextColor: Colors.textDark,
+      backgroundColor: Colors.backgroundLightColor,
+    },
+    user: {
+      displayNameColor: Colors.textDark
+    }
+  },
+  createGroup: {
+    backgroundColor: Colors.backgroundLightColor,
+    header: {
+      titleColor: Colors.textDark,
+    },
+    searchBar: {
+      inputTextColor: Colors.textDark,
+      backgroundColor: Colors.backgroundLightColor,
+    },
+    input: {
+      color: Colors.textDark
+    },
     user: {
       displayNameColor: Colors.textDark
     }
@@ -139,6 +169,9 @@ export const darkTheme = {
   	details: {
   	  titleColor: Colors.textLight
   	},
+    input: {
+      color: Colors.textLight
+    },
   	member: {
   	  backgroundColor: Colors.backgroundGreyColor,
   	  displayNameColor: Colors.textLight,
@@ -156,15 +189,41 @@ export const darkTheme = {
   contactList: {
   	backgroundColor: Colors.backgroundDarkColor,
   	header: {},
+    searchBar: {
+      inputTextColor: Colors.textLight,
+      backgroundColor: Colors.backgroundDarkColor,
+    },
   	user: {
-  	  displayNameColor: Colors.textDark
+  	  displayNameColor: Colors.textLight
   	}
   },
   addMembers: {
-    backgroundColor: Colors.backgroundLightColor,
-    header: {},
+    backgroundColor: Colors.backgroundDarkColor,
+    header: {
+      titleColor: Colors.textLight,
+    },
+    searchBar: {
+      inputTextColor: Colors.textLight,
+      backgroundColor: Colors.backgroundDarkColor,
+    },
     user: {
-      displayNameColor: Colors.textDark
+      displayNameColor: Colors.textLight
+    }
+  },
+  createGroup: {
+    backgroundColor: Colors.backgroundDarkColor,
+    header: {
+      titleColor: Colors.textLight,
+    },
+    searchBar: {
+      inputTextColor: Colors.textLight,
+      backgroundColor: Colors.backgroundDarkColor,
+    },
+    input: {
+      color: Colors.textLight
+    },
+    user: {
+      displayNameColor: Colors.textLight
     }
   }
 }

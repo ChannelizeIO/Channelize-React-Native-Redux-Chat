@@ -215,7 +215,6 @@ export const registerEventHandlers = (client) => {
     });
 
     client.chsocket.on('conversation.typing', function (response) {
-      console.log("response", response)
       dispatch({
         type: TYPING_EVENT,
         payload: response

@@ -5,7 +5,8 @@ import {
   loadOnlineFriends,
   getFriendsList,
   searchFriendList,
-  addMembers
+  createConversation,
+  setActiveConversation
 } from '../actions';
 import { withChannelizeContext } from '../context';
 import { theme } from '../styles/theme';
@@ -15,27 +16,35 @@ import { capitalize } from '../utils';
 import { ListItem, Button, Input, CheckBox, SearchBar } from 'react-native-elements';
 import Avatar from './Avatar'
 import debounce from 'lodash/debounce';
+import { pickImage } from '../native';
 
 const Container = styled.ScrollView`
   position: absolute;
   top: 0px;
   height: 100%;
   width: 100%;
-  background-color: ${props => props.theme.addMembers.backgroundColor };
+  background-color: ${props => props.theme.createGroup.backgroundColor };
   display: flex;
   flex-direction: column;
 `;
 
 const Header = styled.View`
   flex-direction: row;
-  background-color: ${props => props.theme.addMembers.backgroundColor };
+  background-color: ${props => props.theme.createGroup.backgroundColor };
   align-items: center;
   justify-content: center;
 `;
 
 const ContactsContainer = styled.View`
   width: 100%;
-  background-color: ${props => props.theme.addMembers.backgroundColor };
+  background-color: ${props => props.theme.createGroup.backgroundColor };
+`;
+
+const InputView = styled.View`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
 `;
 
 const HeaderBackIcon = styled.View`
@@ -48,7 +57,7 @@ const HeaderTitle = styled.View`
 `;
 
 const HeaderTitleText = styled.Text`
-  color: ${props => props.theme.addMembers.header.titleColor };
+  color: ${props => props.theme.createGroup.header.titleColor };
   text-transform: capitalize;
   font-weight: bold;
   font-size: 15px;
@@ -74,17 +83,20 @@ const SuggestedText = styled.Text`
 `;
 
 const ContactDisplayNameText = styled.Text`
-  color: ${props => props.theme.addMembers.user.displayNameColor };
+  color: ${props => props.theme.createGroup.user.displayNameColor };
   font-weight: bold;
 `;
 
-class AddMembers extends PureComponent {
+class CreateGroup extends PureComponent {
   constructor(props) {
     super(props);
 
     this.state = {
       search: '',
+      title: '',
+      profileImageUrl: null,
       showSearchBar: false,
+      submit: false,
       selectedMembers: []
     }
 
@@ -101,9 +113,26 @@ class AddMembers extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    const { client, connected } = this.props;
+    const { 
+      client,
+      connected,
+      creatingConversation,
+      latestCreatedConversation,
+      onCreateSuccess
+    } = this.props;
+
+    const { submit } = this.state;
+
     if (!connected) {
       return
+    }
+
+    if (submit && latestCreatedConversation) {
+      this.props.setActiveConversation(latestCreatedConversation);
+      if (onCreateSuccess && typeof onCreateSuccess == 'function'){
+        onCreateSuccess();
+      }
+      return;
     }
 
     if (!prevProps.connected && connected) {
@@ -112,18 +141,12 @@ class AddMembers extends PureComponent {
   }
 
   _init = () => {
-    let { client, list, conversation } = this.props;
-
-    if (!list.length) {
-      list = conversation.members;
-    }
-    const skipUserIds = list.map(user => user.userId);
+    let { client, list } = this.props;
 
     // Load friends list
     let friendListQuery = client.User.createUserListQuery();
     friendListQuery.limit = 50;
     friendListQuery.skip = 0;
-    friendListQuery.skipUserIds = skipUserIds;
     friendListQuery.sort = 'isOnline DESC, displayName ASC ';
     this.props.getFriendsList(friendListQuery);
   }
@@ -137,7 +160,7 @@ class AddMembers extends PureComponent {
     return (
       <ListItem
         component={TouchableHighlight}
-        containerStyle={{ backgroundColor: theme.addMembers.backgroundColor }}
+        containerStyle={{ backgroundColor: theme.createGroup.backgroundColor }}
         key={member.id}
         leftAvatar={this._getContactAvatar(member)}
         title={this._renderDisplayName(member)}
@@ -268,6 +291,13 @@ class AddMembers extends PureComponent {
     this._searchOnServer(value);
   }
 
+  _onChangeTitle = (value) => {
+    this.setState({title: value})
+    if (!value) {
+      return
+    }
+  }
+
   _searchOnServer = (value) => {
     const { client } = this.props;
 
@@ -309,20 +339,47 @@ class AddMembers extends PureComponent {
     }))
   }
 
-  _addMembers = () => {
-    console.log("Add members");
-    const { conversation } = this.props;
-    const { selectedMembers } = this.state;
+  _pickImage = () => {
+    const { client, connected } = this.props;
+    if (!connected) {
+      return
+    }
+
+    pickImage((err, file) => {
+      if (err || !file || file.didCancel) {
+        return;
+      }
+
+      this.setState({profileImageUrl: file})
+    })
+  }
+
+  _createGroup = () => {
+    const { client } = this.props;
+    const { title, profileImageUrl, submit, selectedMembers } = this.state;
+    if (submit) {
+      return
+    }
+
     const memberIds = selectedMembers.map(member => member.id)
 
-    this.props.addMembers(conversation, memberIds)
-    this.back();
+    let body = {
+      title: title,
+      members: memberIds,
+      isGroup: true
+    }
+
+    if (profileImageUrl) {
+      body['profileImageUrl'] = profileImageUrl;
+    }
+
+    this.props.createConversation(client, body)
+    this.setState({submit: true})
   }
 
   render() {
     let {
       theme, 
-      conversation,
       friendList,
       loading,
       searching,
@@ -332,7 +389,7 @@ class AddMembers extends PureComponent {
       connected,
       connecting
     } = this.props;
-    const { search, selectedMembers, showSearchBar } = this.state;
+    const { search, title, profileImageUrl, selectedMembers, submit, showSearchBar } = this.state;
 
     if (connecting) {
       return null;
@@ -365,6 +422,7 @@ class AddMembers extends PureComponent {
       headerStyle['paddingLeft'] = 10;
     }
 
+    const showProfileImage = profileImageUrl ? true : false;
     return (
       <Container>
         <Header style={headerStyle}>
@@ -380,7 +438,7 @@ class AddMembers extends PureComponent {
           { !showSearchBar && 
             <React.Fragment>
               <HeaderTitle>
-                <HeaderTitleText>Add Members</HeaderTitleText>
+                <HeaderTitleText>Create Group</HeaderTitleText>
               </HeaderTitle>
               <HeaderIcons>
                 <TouchableOpacity onPress={this._toggleSearchInput}>
@@ -392,11 +450,12 @@ class AddMembers extends PureComponent {
                 </TouchableOpacity>
                 { selectedMembers.length > 0 &&
                   <React.Fragment>
-                    <TouchableOpacity style={{marginLeft: 15}} onPress={this._addMembers}>
+                    <TouchableOpacity style={{marginLeft: 15}} onPress={this._createGroup}>
                       <Icon 
                         name ="md-checkmark"
                         size={30} 
-                        color={theme.colors.primary}
+                        disabled={submit}
+                        color={submit ? theme.colors.disabled : theme.colors.primary}
                       />
                     </TouchableOpacity>
                   </React.Fragment>
@@ -410,10 +469,10 @@ class AddMembers extends PureComponent {
                 paddingBottom: 1,
                 paddingTop: 1,
                 width: "90%",
-                backgroundColor: theme.addMembers.searchBar.backgroundColor,
+                backgroundColor: theme.createGroup.searchBar.backgroundColor,
               }}
               inputStyle={{
-                color: theme.addMembers.searchBar.inputTextColor
+                color: theme.createGroup.searchBar.inputTextColor
               }}
               placeholder="Search"
               placeholderTextColor={theme.colors.textGrey}
@@ -427,6 +486,36 @@ class AddMembers extends PureComponent {
           }
         </Header>
 
+        <InputView>
+          { !showProfileImage &&
+            <TouchableOpacity onPress={this._pickImage}>
+              <Avatar
+                size="medium"
+                rounded
+                overlayContainerStyle={{backgroundColor: theme.colors.backgroundLightGreyColor}}
+                icon={{name: 'camera', type: 'entypo', color: theme.colors.primary}}
+              />
+            </TouchableOpacity>
+          }
+          { showProfileImage &&
+            <TouchableOpacity onPress={this._pickImage}>
+              <Avatar
+                size="medium"
+                rounded
+                source={profileImageUrl.uri}
+              />
+            </TouchableOpacity>
+          }
+          <Input
+            placeholder='Name (ex. Family)'
+            placeholderTextColor={theme.colors.textGrey}
+            onChangeText={this._onChangeTitle}
+            value={title}
+            inputStyle={{
+              color: theme.ConversationDetails.input.color
+            }}
+          />
+        </InputView>
         {!connecting && !connected && 
           <View>
             <Text>Disconnected</Text>
@@ -468,14 +557,14 @@ class AddMembers extends PureComponent {
   }
 };
 
-function mapStateToProps({ client, user, member }, ownProps) {
-  let props = {...member, ...user, ...client};
+function mapStateToProps({ client, user, conversation }, ownProps) {
+  let props = {...user, creatingConversation: conversation.creatingConversation, latestCreatedConversation: conversation.latestCreatedConversation, ...client};
   const mergedProps = { ...props, ...ownProps };
   return {...mergedProps}
 }
 
-AddMembers = withChannelizeContext(
- theme(AddMembers)
+CreateGroup = withChannelizeContext(
+ theme(CreateGroup)
 );
 
 export default connect(
@@ -484,6 +573,7 @@ export default connect(
     loadOnlineFriends,
     getFriendsList,
     searchFriendList,
-    addMembers
+    createConversation,
+    setActiveConversation
   }
-)(AddMembers);
+)(CreateGroup);

@@ -25,6 +25,8 @@ import {
   MEMBERS_REMOVED_EVENT,
   USER_BLOCKED_EVENT,
   USER_UNBLOCKED_EVENT,
+  USER_REMOVED_EVENT,
+  USER_CONVERSATION_DELETED_EVENT,
   CONVERSATION_UPDATED_EVENT
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
@@ -108,13 +110,6 @@ export const processLeaveConversation = (state, action) => {
 
 export const leaveConversationSuccess = (state, action) => {
   state.actionInProcess = false;
-  if (state.conversation) {
-    const jsonConversation = state.conversation.toJSON();
-    jsonConversation.isActive = false;
-
-    const client = Channelize.client.getInstance();
-    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
-  }
 };
 
 export const leaveConversationFail = (state, action) => {
@@ -128,13 +123,6 @@ export const processDeleteConversation = (state, action) => {
 
 export const deleteConversationSuccess = (state, action) => {
   state.actionInProcess = false;
-  if (state.conversation) {
-    const jsonConversation = state.conversation.toJSON();
-    jsonConversation.isDeleted = true;
-
-    const client = Channelize.client.getInstance();
-    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
-  }
 };
 
 export const deleteConversationFail = (state, action) => {
@@ -144,6 +132,19 @@ export const deleteConversationFail = (state, action) => {
 
 export const processUpdateTitle = (state, action) => {
   state.actionInProcess = true;
+};
+
+export const addingMembers = (state, action) => {
+  state.actionInProcess = true;
+};
+
+export const addMembersFail = (state, action) => {
+  state.actionInProcess = false;
+  state.error = action.payload;
+};
+
+export const addMembersSuccess = (state, action) => {
+  state.actionInProcess = false;
 };
 
 export const updateTitleSuccess = (state, action) => {
@@ -218,6 +219,37 @@ export const membersRemoved = (state, action) => {
   }
 };
 
+export const userRemoved = (state, action) => {
+  let { conversation } = action.payload;
+
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  const client = Channelize.client.getInstance();
+
+  let jsonConversation = activeConversation.toJSON();
+  jsonConversation.isActive = false;
+
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+};
+
+export const conversationDeleted = (state, action) => {
+  let { conversation } = action.payload;
+
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  let jsonConversation = state.conversation.toJSON();
+  jsonConversation.isDeleted = true;
+
+  const client = Channelize.client.getInstance();
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+};
+
 export const userBlocked = (state, action) => {
   let { blocker, blockee } = action.payload;
 
@@ -230,12 +262,18 @@ export const userBlocked = (state, action) => {
   // Or if current user is blocking another user
   const client = Channelize.client.getInstance();
   const user = client.getCurrentUser();
-  if (user.id == blocker.id) {
-    jsonConversation = activeConversation.toJSON();
-    jsonConversation.isActive = false;
-
-    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+  if ([blocker.id, blockee.id].indexOf(user.id) < 0) {
+    return
   }
+
+  let jsonConversation = activeConversation.toJSON();
+  if (user.id == blocker.id) {
+    jsonConversation.isActive = false;
+  } else {
+    jsonConversation.user.isActive = false;
+  }
+
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 
 export const userUnblocked = (state, action) => {
@@ -250,32 +288,22 @@ export const userUnblocked = (state, action) => {
   // Or if current user is unblocking another user
   const client = Channelize.client.getInstance();
   const user = client.getCurrentUser();
-  if (user.id == unblocker.id) {
-    jsonConversation = activeConversation.toJSON();
-    jsonConversation.isActive = true;
-
-    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+  if ([unblocker.id, unblockee.id].indexOf(user.id) < 0) {
+    return
   }
-};
 
-export const addingMembers = (state, action) => {
-  state.actionInProcess = true;
+  let jsonConversation = activeConversation.toJSON();
+  if (user.id == unblocker.id) {
+    jsonConversation.isActive = true;
+  } else {
+    jsonConversation.user.isActive = true;
+  }
 
-};
-
-export const addMembersFail = (state, action) => {
-  state.actionInProcess = false;
-  state.error = action.payload;
-};
-
-export const addMembersSuccess = (state, action) => {
-  state.actionInProcess = false;
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 
 export const handlers = {
   [SET_ACTIVE_CONVERSATION]: setActiveConversation,
-  [MEMBERS_ADDED_EVENT]: membersAdded,
-  [MEMBERS_REMOVED_EVENT]: membersRemoved,
   [LOADING_MEMBERS]: loadingMembers,
   [LIST_MEMBERS_FAIL]: listMembersFail,
   [LIST_MEMBERS_SUCCESS]: listMembersSuccess,
@@ -297,8 +325,12 @@ export const handlers = {
   [PROCESS_UPDATE_TITLE]: processUpdateTitle,
   [UPDATE_TITLE_FAIL]: updateTitleFail,
   [UPDATE_TITLE_SUCCESS]: updateTitleSuccess,
+  [MEMBERS_ADDED_EVENT]: membersAdded,
+  [MEMBERS_REMOVED_EVENT]: membersRemoved,
   [USER_BLOCKED_EVENT]: userBlocked,
   [USER_UNBLOCKED_EVENT]: userUnblocked,
+  [USER_REMOVED_EVENT]: userRemoved,
+  [USER_CONVERSATION_DELETED_EVENT]: conversationDeleted,
   [CONVERSATION_UPDATED_EVENT]: conversationUpdated,
 };
 

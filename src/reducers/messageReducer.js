@@ -22,7 +22,9 @@ import {
   MARK_AS_READ_EVENT,
   USER_BLOCKED_EVENT,
   USER_UNBLOCKED_EVENT,
-  TYPING_EVENT
+  TYPING_EVENT,
+  USER_REMOVED_EVENT,
+  USER_CONVERSATION_DELETED_EVENT,
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
 import { Channelize } from 'channelize-chat';
@@ -187,6 +189,37 @@ export const membersRemoved = (state, action) => {
   }
 }
 
+export const userRemoved = (state, action) => {
+  let { conversation } = action.payload;
+
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  const client = Channelize.client.getInstance();
+
+  let jsonConversation = activeConversation.toJSON();
+  jsonConversation.isActive = false;
+
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+};
+
+export const conversationDeleted = (state, action) => {
+  let { conversation } = action.payload;
+
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  let jsonConversation = state.conversation.toJSON();
+  jsonConversation.isDeleted = true;
+
+  const client = Channelize.client.getInstance();
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+};
+
 export const userStatusUpdated = (state, action) => {
   const user = action.payload.user;
   if (state.conversation && !state.conversation.isGroup && state.conversation.user.id == user.id) {
@@ -242,12 +275,18 @@ export const userBlocked = (state, action) => {
   // Or if current user is blocking another user
   const client = Channelize.client.getInstance();
   const user = client.getCurrentUser();
-  if (user.id == blocker.id) {
-    jsonConversation = activeConversation.toJSON();
-    jsonConversation.isActive = false;
-
-    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+  if ([blocker.id, blockee.id].indexOf(user.id) < 0) {
+    return
   }
+
+  let jsonConversation = activeConversation.toJSON();
+  if (user.id == blocker.id) {
+    jsonConversation.isActive = false;
+  } else {
+    jsonConversation.user.isActive = false;
+  }
+
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 
 export const userUnblocked = (state, action) => {
@@ -262,12 +301,18 @@ export const userUnblocked = (state, action) => {
   // Or if current user is unblocking another user
   const client = Channelize.client.getInstance();
   const user = client.getCurrentUser();
-  if (user.id == unblocker.id) {
-    jsonConversation = activeConversation.toJSON();
-    jsonConversation.isActive = true;
-
-    state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+  if ([unblocker.id, unblockee.id].indexOf(user.id) < 0) {
+    return
   }
+
+  let jsonConversation = activeConversation.toJSON();
+  if (user.id == unblocker.id) {
+    jsonConversation.isActive = true;
+  } else {
+    jsonConversation.user.isActive = true;
+  }
+
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 
 export const typingEvent = (state, action) => {
@@ -314,6 +359,8 @@ export const handlers = {
   [MARK_AS_READ_EVENT]: markAsRead,
   [USER_BLOCKED_EVENT]: userBlocked,
   [USER_UNBLOCKED_EVENT]: userUnblocked,
+  [USER_REMOVED_EVENT]: userRemoved,
+  [USER_CONVERSATION_DELETED_EVENT]: conversationDeleted,
   [TYPING_EVENT]: typingEvent
 };
 

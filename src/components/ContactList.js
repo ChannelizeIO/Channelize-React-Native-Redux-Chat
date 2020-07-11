@@ -264,8 +264,17 @@ class ContactList extends PureComponent {
             </TouchableOpacity>
           </HeaderBackIcon>
           <SearchBar
-            containerStyle={{width: "90%"}}
+            containerStyle={{
+              paddingBottom: 1,
+              paddingTop: 1,
+              width: "90%",
+              backgroundColor: theme.contactList.searchBar.backgroundColor,
+            }}
+            inputStyle={{
+              color: theme.contactList.searchBar.inputTextColor
+            }}
             placeholder="Search"
+            placeholderTextColor={theme.colors.textGrey}
             searchIcon={false}
             cancelIcon={false}
             platform={Platform.OS}

@@ -16,6 +16,7 @@
     "channelize-chat": "^4.2.0",
     "immer": "^6.0.3",
     "lodash": "^4.17.15",
+    "mime-types": "^2.1.27",
     "react": "16.11.0",
     "react-native": "0.62.0",
     "react-native-elements": "^2.0.0",

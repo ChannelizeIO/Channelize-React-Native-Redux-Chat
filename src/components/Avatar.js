@@ -3,7 +3,15 @@ import { getAvatarTitleAndColor } from '../utils';
 import { Avatar } from 'react-native-elements'
 
 export default ({title = '', source = null, ...props}) => {
-  let avatarProps = getAvatarTitleAndColor(title);
+  let avatarProps = {}
+  if (title) {
+    avatarProps = getAvatarTitleAndColor(title);
+  }
+
+  if (props.overlayContainerStyle && props.overlayContainerStyle.backgroundColor) {
+    avatarProps['color'] = props.overlayContainerStyle.backgroundColor;
+  }
+
   if (!source) {
     props = {
       ...props,

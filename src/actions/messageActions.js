@@ -16,14 +16,14 @@ import {
 } from '../constants';
 import { uploadFile } from '../native';
 
-export const sendFileToConversation = (client, conversation, file, body) => {
+export const sendFileToConversation = (client, conversation, file, body, attachmentType) => {
   return async dispatch => {
     dispatch({
       type: SENDING_FILE,
       payload: body
     });
     try {
-      const fileData = await uploadFile(client, file, 'image');
+      const fileData = await uploadFile(client, file, attachmentType);
       body = {
         id: body.id,
         attachments: [fileData]
@@ -89,8 +89,8 @@ export const sendMessageToUserId = (client, userId, body) => {
       type: SENDING_MESSAGE,
       payload: body
     });
-    return client.Message.sendMessage(body, (err, response) => {
-      if (err) {
+    return client.Message.sendMessage(body, (error, response) => {
+      if (error) {
         dispatch({
           type: SEND_MESSAGE_FAIL,
           payload: error
@@ -111,8 +111,8 @@ export const getMessageList = (messageListQuery) => {
       type: LOADING_MESSAGE_LIST,
       payload: {}
     });
-    return messageListQuery.list((err, response) => {
-      if (err) {
+    return messageListQuery.list((error, response) => {
+      if (error) {
         dispatch({
           type: MESSAGE_LIST_FAIL,
           payload: error
@@ -139,8 +139,8 @@ export const loadMoreMessages = (messageListQuery) => {
       type: LOADING_LOAD_MORE_MESSAGES,
       payload: {}
     });
-    return messageListQuery.list((err, response) => {
-      if (err) {
+    return messageListQuery.list((error, response) => {
+      if (error) {
         dispatch({
           type: LOAD_MORE_MESSAGES_FAIL,
           payload: error
