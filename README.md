@@ -13,16 +13,97 @@ git clone https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat
 npm install -g react-native-cli
   ```
 3. Install npm dependencies
-```
-npm install
-```
-4. **For Android**: (Please see all the steps in detail in [React native doc](https://reactnative.dev/docs/environment-setup)) 
-   a) Install Android Studio (https://developer.android.com/studio/index.html)
-   b) Install Android SDK
-   c) Configure the ANDROID_HOME environment variable
-   d) Connect Android device or Virtual device to Android Studio
 
-5. Run the react native application by following commands:
+  For react native >= 0.60
+
+   ```
+    npm install
+
+   ```
+
+   For react native < 0.60
+
+```
+   npm install
+   react-native link react-native-vector-icons
+   react-native link react-native-image-picker
+   react-native link react-native-google-places
+   react-native link rn-fetch-blob
+   react-native link react-native-gesture-handler
+   react-native link react-native-reanimated
+   react-native link react-native-screens
+   react-native link react-native-safe-area-context
+   react-native link @react-native-community/masked-view
+```
+
+4. Additional package specific changes
+
+- 1) As per react navigation documentation add the following at the top (make sure it's at the top and there's nothing else before it) of your entry file, such as index.js or App.js: 
+
+https://reactnavigation.org/docs/getting-started/
+https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat/blob/feature/add-remaining-screens/Example.js
+
+
+```
+import 'react-native-gesture-handler';
+```
+
+- 2) There are few Node core modules like `buffer` which needs react native compatibility. Just require (or import) the below module in your app before anything else. 
+
+https://www.npmjs.com/package/node-libs-react-native
+https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat/blob/feature/add-remaining-screens/index.js
+
+```
+import 'node-libs-react-native/globals'
+``` 
+
+Add a metro.config.js file in the root directory of your React Native project and set resolver.extraNodeModules
+
+```
+let nodeLibs = require('node-libs-react-native');
+nodeLibs.fs = require.resolve('react-native-level-fs');
+nodeLibs.tls = require.resolve('node-libs-react-native/mock/tls');;
+
+// metro.config.js
+module.exports = {
+  resolver: {
+    extraNodeModules: nodeLibs,
+  },
+};
+```
+- 3) There is `crypto` package which is used needs implementation of `getRandomValues` for React Native. Just require (or import) the below module in your app before anything else. 
+
+https://www.npmjs.com/package/react-native-get-random-values
+https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat/blob/feature/add-remaining-screens/index.js
+
+```
+import 'react-native-get-random-values'
+```
+
+5. Add required config values `src/config.js` file.
+
+6. **For Android**: (Please see all the steps in detail in [React native doc](https://reactnative.dev/docs/environment-setup)) 
+   - a) Install Android Studio (https://developer.android.com/studio/index.html)
+   - b) Install Android SDK
+   - c) Configure the ANDROID_HOME environment variable
+   - d) There are few permissions which you need to provide in `AndroidManifest.xml`
+
+ ```
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+  ```
+
+   - e) The `react-native-google-places` package require to set `RNGP_ANDROID_API_KEY` key with google api key.
+   - f) Connect Android device or Virtual device to Android Studio
+    
+  **Note for Android:**
+There are few dependencies such as `react-native-google-places` don't have AndroidX support. But an awesome tool named [jetifier](https://github.com/mikehardy/jetifier) is quite useful to patch these dependencies with AndroidX support.
+
+7. Run the react native application by following commands:
 
 ```
    npm run start
@@ -30,6 +111,18 @@ npm install
    npm run ios
 
 ```
+
+## Issues:
+The npm dependencies also include the below npm native packages which has native code /module. 
+
+If you face any issue regarding these packages, please visit the respective package documentations:
+
+- 1) react-native-vector-icons (https://www.npmjs.com/package/react-native-vector-icons)
+- 2) react-native-image-picker (https://www.npmjs.com/package/react-native-image-picker)
+- 3) react-native-google-places (https://www.npmjs.com/package/react-native-google-places)
+- 4) @react-navigation (https://reactnavigation.org/docs/getting-started)
+- 5) rn-fetch-blob (https://www.npmjs.com/package/rn-fetch-blob)
+
 
 ## Components
 ### App
