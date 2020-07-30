@@ -64,7 +64,8 @@ export const sendMessageToConversation = (conversation, body) => {
     });
     body = {
       id: body.id,
-      body: body.body
+      body: body.body,
+      attachments: body.attachments ? body.attachments : [], 
     }
     return conversation.sendMessage(body, (err, response) => {
       if (err) {

@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Platform, ScrollView, View, Image, TouchableHighlight, TouchableOpacity, Text, FlatList, ActivityIndicator } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Icon } from 'react-native-elements';
 import {
   loadOnlineFriends,
   getFriendsList,
@@ -232,7 +232,6 @@ class AddMembers extends PureComponent {
           source={avatarUrl}
           accessory={{
             name: 'close',
-            type: 'ionicons',
             color: theme.colors.danger
           }}
           showAccessory={true}
@@ -371,7 +370,7 @@ class AddMembers extends PureComponent {
           <HeaderBackIcon>
             <TouchableOpacity onPress={this.back}>
               <Icon 
-                name ="md-arrow-back" 
+                name ="arrow-back" 
                 size={30} 
                 color={theme.colors.primary}
               />
@@ -385,7 +384,7 @@ class AddMembers extends PureComponent {
               <HeaderIcons>
                 <TouchableOpacity onPress={this._toggleSearchInput}>
                   <Icon 
-                    name ="ios-search" 
+                    name ="search" 
                     size={30} 
                     color={theme.colors.primary}
                   />
@@ -394,7 +393,7 @@ class AddMembers extends PureComponent {
                   <React.Fragment>
                     <TouchableOpacity style={{marginLeft: 15}} onPress={this._addMembers}>
                       <Icon 
-                        name ="md-checkmark"
+                        name ="check"
                         size={30} 
                         color={theme.colors.primary}
                       />

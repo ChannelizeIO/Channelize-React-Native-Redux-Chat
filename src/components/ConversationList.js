@@ -12,8 +12,8 @@ import {
 } from "../actions";
 import { ListItem, Text, Badge } from 'react-native-elements'
 import Avatar from './Avatar'
-import Icon from 'react-native-vector-icons/Ionicons';
 import ContactList from './ContactList';
+import { Icon } from 'react-native-elements';
 
 const Container = styled.View`
   position: absolute;
@@ -330,14 +330,14 @@ class ConversationList extends PureComponent {
             <HeaderIcons>
               <TouchableOpacity onPress={this._onAddIconClick}>
                 <Icon 
-                  name ="ios-add" 
+                  name ="add"
                   size={30} 
                   color={theme.colors.primary}
                 />
               </TouchableOpacity>
               <TouchableOpacity style={{marginLeft: 15}} onPress={this._onSearchIconClick}>
                 <Icon 
-                  name ="ios-search" 
+                  name ="search" 
                   size={30} 
                   color={theme.colors.primary}
                 />

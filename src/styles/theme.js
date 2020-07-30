@@ -120,6 +120,20 @@ export const lightTheme = {
     user: {
       displayNameColor: Colors.textDark
     }
+  },
+  location: {
+    backgroundColor: Colors.backgroundLightColor,
+    header: {
+      titleColor: Colors.textDark,
+    },
+    searchBar: {
+      inputTextColor: Colors.textDark,
+      backgroundColor: Colors.backgroundLightColor,
+    },
+    place: {
+      primaryText: Colors.textDark,
+      secondaryText: Colors.textGrey
+    }
   }
 }
 
@@ -224,6 +238,20 @@ export const darkTheme = {
     },
     user: {
       displayNameColor: Colors.textLight
+    }
+  },
+  location: {
+    backgroundColor: Colors.backgroundDarkColor,
+    header: {
+      titleColor: Colors.textLight,
+    },
+    searchBar: {
+      inputTextColor: Colors.textLight,
+      backgroundColor: Colors.backgroundDarkColor,
+    },
+    place: {
+      primaryText: Colors.textLight,
+      secondaryText: Colors.textGrey
     }
   }
 }

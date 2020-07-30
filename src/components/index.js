@@ -6,3 +6,4 @@ export ConversationDetails from './ConversationDetails';
 export ContactList from './ContactList';
 export AddMembers from './AddMembers';
 export CreateGroup from './CreateGroup';
+export Location from './Location';

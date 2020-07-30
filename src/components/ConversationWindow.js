@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Platform, View, Image, TouchableOpacity, Text, Linking, ActivityIndicator } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Icon } from 'react-native-elements';
 import { uuid } from 'uuidv4';
 import { lookup } from 'mime-types';
 import {
@@ -327,6 +327,42 @@ class ConversationWindow extends PureComponent {
     }, 'video')
   }
 
+  onLocationClick = () => {
+    const { onLocationClick } = this.props;
+
+    if (onLocationClick && typeof onLocationClick == 'function') {
+      onLocationClick(this.sendLocation)
+    }
+  }
+
+  sendLocation = (place) => {
+    const { conversation, client, connected } = this.props;
+
+    if (!connected) {
+      return
+    }
+
+    let body = {
+      id: uuid(),
+      attachments: [{
+        type: 'location',
+        latitude: place.location.latitude,
+        longitude: place.location.longitude,
+        address: place.address,
+        title: place.name
+      }],
+      pending: true,
+    }
+
+    if (conversation.id) {
+      this.props.sendMessageToConversation(conversation, body)
+    } else {
+      const userId = conversation.user.id;
+      body.userId = userId;
+      this.props.sendMessageToUserId(client, userId, body)
+    }
+  }
+
   sendMessage(messages) {
     const { conversation, client, connected } = this.props;
 
@@ -458,7 +494,7 @@ class ConversationWindow extends PureComponent {
             <HeaderBackIcon>
               <TouchableOpacity onPress={this.back}>
                 <Icon 
-                  name ="md-arrow-back" 
+                  name ="arrow-back" 
                   size={30} 
                   color={theme.colors.primary}
                 />
@@ -529,7 +565,7 @@ class ConversationWindow extends PureComponent {
                 <React.Fragment>
                   <TouchableOpacity style={{marginLeft: 10, marginBottom: 10}} onPress={this.sendImage}>
                     <Icon 
-                      name ="ios-image" 
+                      name ="image" 
                       size={20} 
                       color={theme.colors.primary}
                     />
@@ -537,7 +573,15 @@ class ConversationWindow extends PureComponent {
 
                   <TouchableOpacity style={{marginLeft: 10, marginBottom: 10}} onPress={this.sendVideo}>
                     <Icon 
-                      name ="ios-videocam" 
+                      name ="videocam" 
+                      size={20} 
+                      color={theme.colors.primary}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={{marginLeft: 10, marginBottom: 10}} onPress={this.onLocationClick}>
+                    <Icon 
+                      name="location-on" 
                       size={20} 
                       color={theme.colors.primary}
                     />
@@ -574,7 +618,7 @@ class ConversationWindow extends PureComponent {
                     }}>
                   <VideoMessageView>
                     <Icon
-                      name ="ios-videocam" 
+                      name ="videocam" 
                       size={20} 
                       color={theme.colors.textGrey}
                     />
@@ -588,21 +632,21 @@ class ConversationWindow extends PureComponent {
             <ComposerActionsView>
               <TouchableOpacity onPress={this.sendImage}>
                 <Icon 
-                  name ="ios-image" 
+                  name ="image" 
                   size={30} 
                   color={theme.colors.primary}
                 />
               </TouchableOpacity>
               <TouchableOpacity style={{marginLeft: 10}} onPress={this.sendImage}>
                 <Icon 
-                  name ="ios-image" 
+                  name ="image" 
                   size={30} 
                   color={theme.colors.primary}
                 />
               </TouchableOpacity>
               <TouchableOpacity style={{marginLeft: 10}} onPress={this.sendImage}>
                 <Icon 
-                  name ="ios-image" 
+                  name ="image" 
                   size={30} 
                   color={theme.colors.primary}
                 />

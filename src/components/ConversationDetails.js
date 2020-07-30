@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { ScrollView, View, Image, TouchableHighlight, TouchableOpacity, Text, FlatList, ActivityIndicator } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Icon } from 'react-native-elements';
 import {
   getMembers,
   muteConversation,
@@ -354,7 +354,7 @@ class ConversationDetails extends PureComponent {
           <HeaderBackIcon>
             <TouchableOpacity onPress={this.back}>
               <Icon 
-                name ="md-arrow-back" 
+                name ="arrow-back" 
                 size={30} 
                 color={theme.colors.primary}
               />
@@ -382,7 +382,7 @@ class ConversationDetails extends PureComponent {
                 rightIcon={
                  <TouchableOpacity onPress={this._updateTitle}>
                   <Icon 
-                    name ="md-checkmark" 
+                    name ="check" 
                     size={25} 
                     color={theme.colors.primary}
                   />
@@ -398,7 +398,7 @@ class ConversationDetails extends PureComponent {
               { conversation.isGroup && conversation.isAdmin &&
                 <TouchableOpacity onPress={this._toggleInput}>
                   <Icon 
-                    name ="md-create" 
+                    name ="edit" 
                     size={25} 
                     color={theme.colors.primary}
                   />

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@react-native-community/masked-view": "^0.1.10",
+    "@react-native-community/toolbar-android": "0.1.0-rc.2",
     "@react-navigation/native": "^5.6.1",
     "@react-navigation/stack": "^5.6.2",
     "channelize-chat": "^4.2.0",
@@ -22,6 +23,7 @@
     "react-native-elements": "^2.0.0",
     "react-native-gesture-handler": "^1.6.1",
     "react-native-gifted-chat": "^0.15.3",
+    "react-native-google-places": "^3.1.2",
     "react-native-image-picker": "^2.3.1",
     "react-native-reanimated": "^1.9.0",
     "react-native-safe-area-context": "^3.0.7",

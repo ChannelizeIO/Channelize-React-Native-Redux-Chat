@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Platform, ScrollView, View, Image, TouchableHighlight, TouchableOpacity, Text, FlatList, ActivityIndicator } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Icon } from 'react-native-elements';
 import {
   loadOnlineFriends,
   getFriendsList,
@@ -257,7 +257,7 @@ class ContactList extends PureComponent {
           <HeaderBackIcon>
             <TouchableOpacity onPress={this.back}>
               <Icon 
-                name ="md-arrow-back" 
+                name ="arrow-back" 
                 size={30} 
                 color={theme.colors.primary}
               />

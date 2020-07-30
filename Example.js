@@ -10,6 +10,7 @@ import {
   ContactList,
   AddMembers,
   CreateGroup,
+  Location,
   store
 } from './src';
 import { Channelize } from 'channelize-chat';
@@ -24,9 +25,9 @@ if (process.env.NODE_ENV === 'development') {
   console.disableYellowBox = true;
 }
 
-const PUBLIC_KEY; //Channelize.io public key
-const LOGGEDIN_USER_ID;//User id of loggedin user
-const CH_ACCESS_TOKEN; //Channelize access token of loggedin userid 
+let PUBLIC_KEY; //Channelize.io public key
+let LOGGEDIN_USER_ID;//User id of loggedin user
+let CH_ACCESS_TOKEN; //Channelize access token of loggedin userid 
 
 class ConversationListScreen extends Component {
   static navigationOptions = () => {
@@ -76,6 +77,12 @@ class ConversationWindowScreen extends Component {
     super(props);
   }
 
+  onLocationClick = (callback) => {
+    this.props.navigation.navigate('Location', {
+      sendLocation: callback
+    });
+  }
+
   onConversationHeaderClick = (conversation) => {
     this.props.navigation.navigate('ConversationDetails');
   }
@@ -94,6 +101,7 @@ class ConversationWindowScreen extends Component {
         <ConversationWindow 
           onBack={this.onBack}
           onConversationHeaderClick={this.onConversationHeaderClick}
+          onLocationClick={this.onLocationClick}
         />
       </App>
     );
@@ -227,6 +235,43 @@ class CreateGroupScreen extends Component {
   }
 }
 
+class LocationScreen extends Component {
+  static navigationOptions = ({ navigation }) => {
+    header: null
+  };
+
+  constructor(props) {
+    super(props);
+  }
+
+  onBack = () => {
+    this.props.navigation.goBack();
+  }
+
+  onPlacePress = (place) => {
+    const { sendLocation } = this.props.route.params;
+
+    // Send location
+    sendLocation(place)
+    this.props.navigation.navigate('ConversationWindow') 
+  }
+
+  render() {
+    var client = new Channelize.client({publicKey: PUBLIC_KEY});
+    var theme = {
+      theme: 'light'
+    }
+    return (
+      <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
+        <Location
+          onBack={this.onBack}
+          onPlacePress={this.onPlacePress} 
+        />
+      </App>
+    );
+  }
+}
+
 const Stack = createStackNavigator();
 
 export default function Example() {
@@ -243,6 +288,7 @@ export default function Example() {
           <Stack.Screen name="ContactList" component={ContactListScreen} />
           <Stack.Screen name="AddMembers" component={AddMembersScreen} />
           <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+          <Stack.Screen name="Location" component={LocationScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Platform, ScrollView, View, Image, TouchableHighlight, TouchableOpacity, Text, FlatList, ActivityIndicator } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Icon } from 'react-native-elements';
 import {
   loadOnlineFriends,
   getFriendsList,
@@ -255,7 +255,6 @@ class CreateGroup extends PureComponent {
           source={avatarUrl}
           accessory={{
             name: 'close',
-            type: 'ionicons',
             color: theme.colors.danger
           }}
           showAccessory={true}
@@ -429,7 +428,7 @@ class CreateGroup extends PureComponent {
           <HeaderBackIcon>
             <TouchableOpacity onPress={this.back}>
               <Icon 
-                name ="md-arrow-back" 
+                name ="arrow-back" 
                 size={30} 
                 color={theme.colors.primary}
               />
@@ -443,7 +442,7 @@ class CreateGroup extends PureComponent {
               <HeaderIcons>
                 <TouchableOpacity onPress={this._toggleSearchInput}>
                   <Icon 
-                    name ="ios-search" 
+                    name ="search" 
                     size={30} 
                     color={theme.colors.primary}
                   />
@@ -452,7 +451,7 @@ class CreateGroup extends PureComponent {
                   <React.Fragment>
                     <TouchableOpacity style={{marginLeft: 15}} onPress={this._createGroup}>
                       <Icon 
-                        name ="md-checkmark"
+                        name ="check"
                         size={30} 
                         disabled={submit}
                         color={submit ? theme.colors.disabled : theme.colors.primary}
@@ -493,7 +492,7 @@ class CreateGroup extends PureComponent {
                 size="medium"
                 rounded
                 overlayContainerStyle={{backgroundColor: theme.colors.backgroundLightGreyColor}}
-                icon={{name: 'camera', type: 'entypo', color: theme.colors.primary}}
+                icon={{name: 'photo', color: theme.colors.primary}}
               />
             </TouchableOpacity>
           }
