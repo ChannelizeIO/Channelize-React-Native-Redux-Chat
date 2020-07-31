@@ -47,26 +47,24 @@ git clone https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat
 4. **Additional package specific changes**
 
       - As per react navigation documentation add the following at the top (make sure it's at the top and there's nothing else 
-         before it) of your entry file, such as index.js or App.js: 
+         before it) of your entry file, such as index.js or App.js: You can see the same code in `src/Example.js`
 
           https://reactnavigation.org/docs/getting-started/
-          https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat/blob/feature/add-remaining-screens/Example.js
 
          ```
          import 'react-native-gesture-handler';
          ```
 
       - There are few Node core modules like `buffer` which needs react native compatibility. Just require (or import) the below 
-           module in your app before anything else. 
+           module in your app before anything else. You can see the same code in `index.js`.
 
            https://www.npmjs.com/package/node-libs-react-native
-           https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat/blob/feature/add-remaining-screens/index.js
 
            ```
             import 'node-libs-react-native/globals';
            ``` 
 
-          Add a metro.config.js file in the root directory of your React Native project and set `resolver.extraNodeModules`
+          Add a `metro.config.js` file in the root directory of your React Native project and set `resolver.extraNodeModules`. You can see the same code in `metro.config.js` file.
 
           ```javascript
           let nodeLibs = require('node-libs-react-native');
@@ -80,10 +78,9 @@ git clone https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat
           };
          ```
      - There is `crypto` package which is used needs implementation of `getRandomValues` for React Native. Just require (or 
-        import) the below module in your app before anything else. 
+        import) the below module in your app before anything else. You can see the same code in `index.js`.
 
          https://www.npmjs.com/package/react-native-get-random-values
-         https://github.com/ChannelizeIO/Channelize-React-Native-Redux-Chat/blob/feature/add-remaining-screens/index.js
 
         ```
         import 'react-native-get-random-values'
