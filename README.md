@@ -7,7 +7,8 @@ This is react native redux UI Kit using Channelize.io Javascript SDKs. https://d
 - [Setup](#setup)
 - [Components](#components)
 - [Themes](#themes)
-- [How to add UI Kit into your existing app](#how-to-add-uI-kit-into-your-existing-app)
+- [Integrate React Native UI Kit in your application](#integrate-react-native-ui-kit-in-your-application)
+- [How to add UI Kit into your existing app](#how-to-add-ui-kit-into-your-existing-app)
 - [Issues](#issues)
 
 ## Setup
