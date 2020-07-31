@@ -137,51 +137,51 @@ This is the application component which combines all the components and takes Ja
 This component is for displaying header and listing of all the conversations with a better UI. 
 
   **Props**
-  `onSelect`: This is function type callback and triggers on any conversation select from the list.
-  `onSearchIconClick`: This is function type callback and triggers on search icon click which is displayed on header.
-   `onAddIconClick`: This is function type callback and triggers on add icon click which is displayed on header.
+  - `onSelect`: This is function type callback and triggers on any conversation select from the list.
+  - `onSearchIconClick`: This is function type callback and triggers on search icon click which is displayed on header.
+  - `onAddIconClick`: This is function type callback and triggers on add icon click which is displayed on header.
   
 ### ConversationWindow
 This component is for displaying conversation header, message listing and message input box with a better UI. 
 
   **Props**
-  `onBack`: This is function type callback and triggers on back icon click.
-  `onConversationHeaderClick`: This is function type callback and triggers on.
-  `onLocationClick`: This is function type callback and triggers on location icon click which is displayed on composer.
+  -  `onBack`: This is function type callback and triggers on back icon click.
+  - `onConversationHeaderClick`: This is function type callback and triggers on.
+  - `onLocationClick`: This is function type callback and triggers on location icon click which is displayed on composer.
 
 ### ConversationDetails
 This component is for listing members, updating conversation settings such as mute / unmute conversation, delete conversation, leave conversation, block / unblock user, Add / remove members etc.
 
   **Props**
-  `onBack`: This is function type callback and triggers on back icon click.
-  `onAddMembersClick`: This is function type callback and triggers on `Add Members`.
+  - `onBack`: This is function type callback and triggers on back icon click.
+  - `onAddMembersClick`: This is function type callback and triggers on `Add Members`.
 
 ### CreateGroup
 This component provides UI screen for creating a new group with group title, photo and by adding members.
 
   **Props**
-  `onBack`: This is function type callback and triggers on back icon click.
-  `onCreateSuccess`: This is function type callback and triggers on creating group successfully.
+  - `onBack`: This is function type callback and triggers on back icon click.
+  - `onCreateSuccess`: This is function type callback and triggers on creating group successfully.
 
 ### AddMembers
 This component provides a UI screen for adding new members in a group.
 
   **Props**
-  `onBack`: This is function type callback and triggers on back icon click.
+  - `onBack`: This is function type callback and triggers on back icon click.
   
 ### Search
 This component is for searching contacts & groups.
 
   **Props**
-  `onBack`: This is function callback and triggers on back icon click.
-  `onContactClick`: This is function callback and triggers on contact click.
+  - `onBack`: This is function callback and triggers on back icon click.
+  - `onContactClick`: This is function callback and triggers on contact click.
 
 ### Location
 This component is for listing google places and allow to search all google places over there. This component is useful in location sharing.
 
   **Props**
-  `onBack`: This is function type callback and triggers on back icon click.
-  `onPlacePress`: This is function type callback and triggers on any place press from the list.
+  - `onBack`: This is function type callback and triggers on back icon click.
+  - `onPlacePress`: This is function type callback and triggers on any place press from the list.
 
 ### Avatar
 This component renders the image and background color with initials.
