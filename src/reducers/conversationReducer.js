@@ -122,16 +122,16 @@ export const userUpdated = (state, action) => {
 export const newMessageReceived = (state, action) => {
   let message = action.payload.message;
   let user = action.payload.user;
-
   let conversationIndex;
   let latestConversation;
 
+  const { events } = message;
   const finalList = state.list.map((conversation, index) => {
     if (conversation.id == message.conversationId) {
       conversation.lastMessage = message;
       conversation.updatedAt = action.payload.timestamp;
 
-      if (user.id != message.ownerId) {
+      if (user.id != message.ownerId && events.updateUnreadCount) {
         conversation.unreadMessageCount = conversation.unreadMessageCount + 1;
       }
 

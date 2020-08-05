@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { Platform, View, Image, TouchableOpacity, Text, Linking, ActivityIndicator } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { lookup } from 'mime-types';
 import {
   getMessageList,
@@ -178,7 +178,7 @@ class ConversationWindow extends PureComponent {
     if((!prevProps.newMessage && newMessage) || (newMessage && prevProps.newMessage.id != newMessage.id) ) {
       const user = client.getCurrentUser();
       if (conversation && user.id != newMessage.ownerId) {
-        conversation.markAsRead();
+        this._markAsRead(conversation)
       }
     }
   }
@@ -284,7 +284,7 @@ class ConversationWindow extends PureComponent {
       }
 
       const body = {
-        id: uuid(),
+        id: uuidv4(),
         pending: true,
         attachments: [{
           type: fileType,
@@ -306,7 +306,7 @@ class ConversationWindow extends PureComponent {
         return;
       }
 
-      file.name = file.name ? file.name : file.path.split('/').pop();
+      file.name = file.name ? file.name : file.uri.split('/').pop();
       file.type = lookup(file.name);
       let fileType = file.type.split('/').shift();
       if (! ['image', 'video', 'audio'].includes(fileType) ) {
@@ -315,7 +315,7 @@ class ConversationWindow extends PureComponent {
       }
 
       const body = {
-        id: uuid(),
+        id: uuidv4(),
         pending: true,
         attachments: [{
           type: fileType,
@@ -343,7 +343,7 @@ class ConversationWindow extends PureComponent {
     }
 
     let body = {
-      id: uuid(),
+      id: uuidv4(),
       attachments: [{
         type: 'location',
         latitude: place.location.latitude,
@@ -372,7 +372,7 @@ class ConversationWindow extends PureComponent {
 
     const newMessage = messages[0];
     let body = {
-      id: uuid(),
+      id: uuidv4(),
       body: newMessage.text,
       pending: true,
     }

@@ -179,7 +179,7 @@ export const membersAdded = (state, action) => {
   let { conversation, members, timestamp } = action.payload;
 
   const activeConversation = state.conversation;
-  if (activeConversation.id == conversation.id) {
+  if (activeConversation && activeConversation.id == conversation.id) {
     let jsonConversation = state.conversation.toJSON();
     jsonConversation.members = jsonConversation.members.concat(members)
     jsonConversation.memberCount = conversation.memberCount;
@@ -198,7 +198,7 @@ export const membersRemoved = (state, action) => {
   let { conversation, members, timestamp } = action.payload;
 
   const activeConversation = state.conversation;
-  if (activeConversation.id == conversation.id) {
+  if (activeConversation && activeConversation.id == conversation.id) {
     // Update conversation
     let jsonConversation = state.conversation.toJSON();
     jsonConversation.memberCount = conversation.memberCount;
