@@ -3,7 +3,6 @@ import RNFetchBlob from 'rn-fetch-blob'
 
 export const pickImage = function(cb, mediaType='photo') {
   ImagePicker.launchImageLibrary({mediaType: mediaType}, (response) => {
-  	console.log('Response = ', response);
   	if (response.error) {
       console.log('ImagePicker Error: ', response.error);
       return cb(response.error);
@@ -14,16 +13,16 @@ export const pickImage = function(cb, mediaType='photo') {
   	}
 
     // Checking the platform and change the uri if needed
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && response.path) {
       response.uri = 'file://' + response.path;
     }
 
-    if (Platform.OS === 'ios') {
-      response.uri = uri.replace('file://', '');
+    if (Platform.OS === 'ios' && response.uri) {
+      response.uri = response.uri.replace('file://', '');
     }
 
     // Sometime react-native-image-picker library doesn't give fileName
-    if (!response.fileName) {
+    if (!response.fileName && response.uri) {
       let paths = response.uri.split('/');
       response.fileName = paths[paths.length - 1];
     }
@@ -31,10 +30,8 @@ export const pickImage = function(cb, mediaType='photo') {
     /** For react-native-image-picker library doesn't return type in iOS,
      *  it is necessary to force the type to be an image/jpeg (or whatever you're intended to be).
      */
-    if (!response.type) {
-      if (Platform.OS === 'ios') {
-        response.type = 'image/jpeg';
-      }
+    if (!response.type && Platform.OS === 'ios') {
+      response.type = 'image/jpeg';
     }
 
    	return cb(null, {
@@ -58,7 +55,6 @@ export const uploadFile = async function(client, file, type) {
     	{'Content-Type': file.type},
   	    RNFetchBlob.wrap(file.uri)
     	).then(res => {
-  	    console.log('res', res);
   	    metaData['fileUrl'] = fileData['fileUrl'];
   	    metaData['type'] = metaData['attachmentType'];
   	    return resolve(metaData);

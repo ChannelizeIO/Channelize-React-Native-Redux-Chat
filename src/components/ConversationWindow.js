@@ -17,7 +17,7 @@ import styled from 'styled-components/native';
 import { connect } from 'react-redux';
 import { modifyMessageList, capitalize, dateTimeParser, typingString } from '../utils';
 import { GiftedChat } from 'react-native-gifted-chat'
-import Avatar from './Avatar'
+import Avatar from './Avatar';
 import { pickImage } from '../native';
 import throttle from 'lodash/throttle';
 import debounce from 'lodash/debounce';
@@ -34,12 +34,26 @@ const Container = styled.View`
 
 const Header = styled.View`
   padding: 10px;
-  flex-direction: row;
+  flex-direction: column;
   background-color: ${props => props.theme.conversationWindow.backgroundColor };
 `;
 
 const HeaderBackIcon = styled.View`
   margin-right: 10px;
+`;
+
+const HeaderContent = styled.View`
+  flex-direction: row;
+`;
+
+const HeaderErrorMessage = styled.View`
+  margin-top: 10px;
+  flex-direction: row;
+  justify-content: center; 
+`;
+
+const HeaderErrorMessageText = styled.Text`
+  color: ${props => props.theme.colors.danger };
 `;
 
 const HeaderImage = styled.View`
@@ -275,7 +289,7 @@ class ConversationWindow extends PureComponent {
         return;
       }
 
-      file.name = file.name ? file.name : file.path.split('/').pop();
+      file.name = file.name ? file.name : file.uri.split('/').pop();
       file.type = lookup(file.name);
       let fileType = file.type.split('/').shift();
       if (! ['image', 'video', 'audio'].includes(fileType) ) {
@@ -491,31 +505,32 @@ class ConversationWindow extends PureComponent {
               shadowRadius: 1.00,
               elevation: 1
             }}>
-            <HeaderBackIcon>
-              <TouchableOpacity onPress={this.back}>
-                <Icon 
-                  name ="arrow-back" 
-                  size={30} 
-                  color={theme.colors.primary}
-                />
+            <HeaderContent>
+              <HeaderBackIcon>
+                <TouchableOpacity onPress={this.back}>
+                  <Icon 
+                    name ="arrow-back" 
+                    size={30} 
+                    color={theme.colors.primary}
+                  />
+                </TouchableOpacity>
+              </HeaderBackIcon>
+              <HeaderImage>
+                <Avatar title={headerTitle} source={headerImage}/>
+              </HeaderImage>
+              <TouchableOpacity onPress={this.onConversationHeaderClick}>
+                <HeaderTitle>
+                  <HeaderTitleText>{headerTitle}</HeaderTitleText>
+                  <HeaderSubtitleText>{headerSubtitle}</HeaderSubtitleText>
+                </HeaderTitle>
               </TouchableOpacity>
-            </HeaderBackIcon>
-            <HeaderImage>
-              <Avatar title={headerTitle} source={headerImage}/>
-            </HeaderImage>
-            <TouchableOpacity onPress={this.onConversationHeaderClick}>
-              <HeaderTitle>
-                <HeaderTitleText>{headerTitle}</HeaderTitleText>
-                <HeaderSubtitleText>{headerSubtitle}</HeaderSubtitleText>
-              </HeaderTitle>
-            </TouchableOpacity>
+            </HeaderContent>
+            {!connecting && !connected && 
+              <HeaderErrorMessage>
+                <HeaderErrorMessageText>Disconnected</HeaderErrorMessageText>
+              </HeaderErrorMessage>
+            }
           </Header>
-
-          {!connecting && !connected && 
-            <View>
-              <Text>Disconnected</Text>
-            </View>
-          }
 
           <GiftedChat
             messages={list}

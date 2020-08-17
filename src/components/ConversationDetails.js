@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { ScrollView, View, Image, TouchableHighlight, TouchableOpacity, Text, FlatList, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Image, TouchableHighlight, TouchableOpacity, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { Icon } from 'react-native-elements';
 import {
   getMembers,
@@ -8,8 +8,12 @@ import {
   leaveConversation,
   deleteConversation,
   updateTitle,
+  updateProfilePhoto,
   block,
-  unblock
+  unblock,
+  removeMembers,
+  addAdmin,
+  removeAdmin
 } from '../actions';
 import { withChannelizeContext } from '../context';
 import { theme } from '../styles/theme';
@@ -18,6 +22,8 @@ import { connect } from 'react-redux';
 import { capitalize, dateTimeParser } from '../utils';
 import { ListItem, Button, Input } from 'react-native-elements';
 import Avatar from './Avatar'
+import Overlay from './Overlay';
+import { pickImage } from '../native';
 
 const Container = styled.ScrollView`
   position: absolute;
@@ -53,6 +59,16 @@ const RedActionButtonsContainer = styled.View`
 
 const HeaderBackIcon = styled.View`
   margin-right: 10px;
+`;
+
+const HeaderErrorMessage = styled.View`
+  margin-top: 10px;
+  flex-direction: row;
+  justify-content: center; 
+`;
+
+const HeaderErrorMessageText = styled.Text`
+  color: ${props => props.theme.colors.danger };
 `;
 
 const ConversationDetailsContainer = styled.View`
@@ -107,7 +123,9 @@ class ConversationDetails extends PureComponent {
 
     this.state = {
       showInput: false,
-      title: null
+      title: null,
+      deleted: false,
+      pressedMember: null
     }
   }
 
@@ -121,7 +139,13 @@ class ConversationDetails extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    const { client, connected, conversation } = this.props;
+    const { 
+      client,
+      connected,
+      conversation,
+      actionInProcess,
+      onConversationDeleted
+     } = this.props;
     if (!connected) {
       return
     }
@@ -132,6 +156,14 @@ class ConversationDetails extends PureComponent {
 
     if ((!prevProps.conversation && conversation) || (prevProps.conversation.id != conversation.id)) {
       this._init();
+    }
+
+    // on successful conversation deleted
+    const { deleted } = this.state;
+    if (deleted && (prevProps.actionInProcess && !actionInProcess)) {
+      if (onConversationDeleted && typeof onConversationDeleted == 'function') {
+        onConversationDeleted(conversation);
+      }
     }
   }
 
@@ -160,6 +192,21 @@ class ConversationDetails extends PureComponent {
     this.setState({title: value})
   }
 
+  _updateProfilePhoto = () => {
+    const { client, conversation, connected } = this.props;
+    if (!connected) {
+      return
+    }
+
+    pickImage((err, file) => {
+      if (err || !file || file.didCancel) {
+        return;
+      }
+
+      this.props.updateProfilePhoto(client, conversation, file);
+    })
+  }
+
   _updateTitle = () => {
     const { title } = this.state;
     const { conversation } = this.props;
@@ -168,11 +215,13 @@ class ConversationDetails extends PureComponent {
   }
 
   _renderMember = rowData => {
-    const { theme } = this.props;
+    const { theme, client } = this.props;
     const member = rowData.item;
+    const user = client.getCurrentUser();
+
     return (
       <ListItem
-        component={TouchableHighlight}
+        component={user.id != member.userId ? TouchableHighlight : null}
         containerStyle={{ backgroundColor: theme.ConversationDetails.member.backgroundColor }}
         key={member.id}
         leftAvatar={this._getMemberAvatar(member)}
@@ -180,7 +229,7 @@ class ConversationDetails extends PureComponent {
         titleStyle={{ fontWeight: '500', fontSize: 16 }}
         rightTitle={this._renderMemberRole(member)}
         subtitleStyle={{ fontWeight: '300', fontSize: 11 }}
-        onPress={() => this._onMemberPress(member)}
+        onPress={user.id != member.userId ? () => this._togglePressedMember(member) : null}
       />
     );
   };
@@ -244,11 +293,44 @@ class ConversationDetails extends PureComponent {
   }
 
   _addMembers = () => {
-    console.log("Add Members");
     const { onAddMembersClick, conversation } = this.props;
     if (onAddMembersClick && typeof onAddMembersClick == 'function') {
       onAddMembersClick(conversation);
     }
+  }
+
+  _removeMembers = (member) => {
+    const { conversation } = this.props;
+    this.props.removeMembers(conversation, [member.user.id]);
+    this._togglePressedMember();
+  }
+
+  _addAdmin = (member) => {
+    const { conversation } = this.props;
+    this.props.addAdmin(conversation, member.user.id)
+    this._togglePressedMember();
+  }
+
+  _removeAdmin = (member) => {
+    const { conversation } = this.props;
+    this.props.removeAdmin(conversation, member.user.id)
+    this._togglePressedMember();
+  }
+
+  _showBlockAlert = () => {
+    Alert.alert(
+      '',
+      'Are you sure you want to block this user? The blocked contact will no longer able to send messages.',
+      [
+        {
+          text: 'CANCEL',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel'
+        },
+        { text: 'BLOCK', onPress: this._block }
+      ],
+      { cancelable: false }
+    );
   }
 
   _block = () => {
@@ -279,18 +361,54 @@ class ConversationDetails extends PureComponent {
     this.props.unmuteConversation(conversation)
   }
 
+  _showLeaveConversationAlert = () => {
+    Alert.alert(
+      '',
+      'Are you sure you want to leave this group? You will no longer receive new messages.',
+      [
+        {
+          text: 'CANCEL',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel'
+        },
+        { text: 'LEAVE', onPress: this._leaveConversation }
+      ],
+      { cancelable: false }
+    );
+  }
+
   _leaveConversation = () => {
     const { conversation } = this.props;
     this.props.leaveConversation(conversation)
   }
 
+  _showDeleteConversationAlert = () => {
+    Alert.alert(
+      '',
+      'Are you sure you want to delete this conversation? Once deleted, it cannot be undone..',
+      [
+        {
+          text: 'CANCEL',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel'
+        },
+        { text: 'Delete', onPress: this._deleteConversation }
+      ],
+      { cancelable: false }
+    );
+  }
+
   _deleteConversation = () => {
     const { conversation } = this.props;
     this.props.deleteConversation(conversation)
+
+    this.setState({deleted: true})
   }
 
-  _onMemberPress = member => {
-    console.log("_onMemberPress");
+  _togglePressedMember = member => {
+    this.setState(prevState => ({
+      pressedMember: prevState.pressedMember ? null : member
+    }))
   }
 
   render() {
@@ -302,9 +420,11 @@ class ConversationDetails extends PureComponent {
       error,
       client,
       connected,
-      connecting
+      connecting,
+      actionInProcess,
+      userActionInProcess
     } = this.props;
-    const { showInput, title } = this.state;
+    const { showInput, title, pressedMember } = this.state;
     if (connecting) {
       return null;
     }
@@ -360,16 +480,56 @@ class ConversationDetails extends PureComponent {
               />
             </TouchableOpacity>
           </HeaderBackIcon>
+          {!connecting && !connected && 
+            <HeaderErrorMessage>
+              <HeaderErrorMessageText>Disconnected</HeaderErrorMessageText>
+            </HeaderErrorMessage>
+          }
         </Header>
 
-        {!connecting && !connected && 
-          <View>
-            <Text>Disconnected</Text>
-          </View>
+        {(userActionInProcess || actionInProcess) && 
+          <Overlay>
+            <Text>Please wait...</Text>
+          </Overlay>
+        }
+
+        { pressedMember && conversation.isGroup && conversation.isAdmin &&
+          <Overlay 
+            style={{ width: '80%'}}
+            onBackDropPress={() => this._togglePressedMember(pressedMember)}
+          >
+            <ListItem
+              component={TouchableHighlight}
+              key="remove-members"
+              title={`Remove ${capitalize(pressedMember.user.displayName)}`}
+              onPress={() => this._removeMembers(pressedMember)}
+            />
+            { !pressedMember.isAdmin &&
+              <ListItem
+                component={TouchableHighlight}
+                key="make-group-admin"
+                title="Make Group Admin"
+                onPress={() => this._addAdmin(pressedMember)}
+              />
+            }
+            { pressedMember.isAdmin &&
+              <ListItem
+                component={TouchableHighlight}
+                key="remove-as-admin"
+                title="Remove as admin"
+                onPress={() => this._removeAdmin(pressedMember)}
+              />
+            }
+          </Overlay>
         }
 
         <ConversationDetailsContainer>
-          <Avatar size="xlarge" title={headerTitle} source={headerImage}/>
+          <Avatar 
+            size="xlarge"
+            title={headerTitle}
+            source={headerImage}
+            onPress={this._updateProfilePhoto}
+          />
           {showInput && conversation.isGroup && conversation.isAdmin &&
             <View style={{width: "100%"}}>
               <Input
@@ -443,7 +603,7 @@ class ConversationDetails extends PureComponent {
         }
 
         <PrimaryActionButtonsContainer>
-          {!conversation.mute && 
+          { conversation.isActive && !conversation.mute && 
             <ListItem
               component={TouchableHighlight}
               containerStyle={{ backgroundColor: theme.ConversationDetails.primaryActionButtons.backgroundColor }}
@@ -452,7 +612,7 @@ class ConversationDetails extends PureComponent {
               onPress={this._muteConversation}
             />
           }
-          {conversation.mute &&
+          { conversation.isActive && conversation.mute &&
             <ListItem
               component={TouchableHighlight}
               containerStyle={{ backgroundColor: theme.ConversationDetails.primaryActionButtons.backgroundColor }}
@@ -467,7 +627,7 @@ class ConversationDetails extends PureComponent {
               containerStyle={{ backgroundColor: theme.ConversationDetails.primaryActionButtons.backgroundColor }}
               title={<PrimaryActionButtonText>Leave Conversation</PrimaryActionButtonText>}
               titleStyle={{ fontWeight: '500', fontSize: 16 }}
-              onPress={this._leaveConversation}
+              onPress={this._showLeaveConversationAlert}
             />
           }
           {!conversation.isGroup && conversation.isActive &&
@@ -476,14 +636,14 @@ class ConversationDetails extends PureComponent {
               containerStyle={{ backgroundColor: theme.ConversationDetails.primaryActionButtons.backgroundColor }}
               title={<PrimaryActionButtonText>Block</PrimaryActionButtonText>}
               titleStyle={{ fontWeight: '500', fontSize: 16 }}
-              onPress={this._block}
+              onPress={this._showBlockAlert}
             />
           }
           {!conversation.isGroup && !conversation.isActive &&
             <ListItem
               component={TouchableHighlight}
               containerStyle={{ backgroundColor: theme.ConversationDetails.primaryActionButtons.backgroundColor }}
-              title={<PrimaryActionButtonText>UnBlock</PrimaryActionButtonText>}
+              title={<PrimaryActionButtonText>Unblock</PrimaryActionButtonText>}
               titleStyle={{ fontWeight: '500', fontSize: 16 }}
               onPress={this._unblock}
             />
@@ -496,7 +656,7 @@ class ConversationDetails extends PureComponent {
             containerStyle={{ backgroundColor: theme.ConversationDetails.redActionButtons.backgroundColor }}
             title={<RedActionButtonText>Delete Conversation</RedActionButtonText>}
             titleStyle={{ fontWeight: '500', fontSize: 16 }}
-            onPress={this._deleteConversation}
+            onPress={this._showDeleteConversationAlert}
           />
         </RedActionButtonsContainer>
       </Container>
@@ -505,7 +665,7 @@ class ConversationDetails extends PureComponent {
 };
 
 function mapStateToProps({ client, member, user }, ownProps) {
-  let props = {...member, ...client};
+  let props = {...member, ...client, userActionInProcess: user.actionInProcess};
   const mergedProps = { ...props, ...ownProps };
   return {...mergedProps}
 }
@@ -524,6 +684,10 @@ export default connect(
     unmuteConversation,
     leaveConversation,
     deleteConversation,
-    updateTitle
+    updateTitle,
+    updateProfilePhoto,
+    removeMembers,
+    addAdmin,
+    removeAdmin
   }
 )(ConversationDetails);

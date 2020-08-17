@@ -18,7 +18,9 @@ import {
   USER_REMOVED_EVENT,
   USER_MUTE_UPDATED_EVENT,
   USER_CONVERSATION_DELETED_EVENT,
-  TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT
+  TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT,
+  ADMIN_ADDED_EVENT,
+  ADMIN_REMOVED_EVENT
 } from '../constants';
 
 const _connect = (client, userId, accessToken) => {
@@ -118,6 +120,24 @@ const disconnectFail = (dispatch, error) => {
 
 export const registerEventHandlers = (client) => {
   return dispatch => {
+    client.chsocket.on('connected', function () {
+      dispatch({
+        type: CONNECT_SUCCESS
+      });
+    });
+
+    client.chsocket.on('disconnected', function () {
+      dispatch({
+        type: DISCONNECT_SUCCESS
+      });
+    });
+
+    client.chsocket.on('reconnected', function () {
+      dispatch({
+        type: CONNECT_SUCCESS
+      });
+    });
+
     client.chsocket.on('user.status_updated', function (payload) {
       dispatch({
         type: USER_STATUS_UPDATED_EVENT,
@@ -175,6 +195,20 @@ export const registerEventHandlers = (client) => {
     client.chsocket.on('user.mute_updated', function (res) {
       dispatch({
         type: USER_MUTE_UPDATED_EVENT,
+        payload: res
+      });
+    });
+
+    client.chsocket.on('conversation.admin_added', function (res) {
+      dispatch({
+        type: ADMIN_ADDED_EVENT,
+        payload: res
+      });
+    });
+
+    client.chsocket.on('conversation.admin_removed', function (res) {
+      dispatch({
+        type: ADMIN_REMOVED_EVENT,
         payload: res
       });
     });

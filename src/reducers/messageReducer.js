@@ -25,6 +25,8 @@ import {
   TYPING_EVENT,
   USER_REMOVED_EVENT,
   USER_CONVERSATION_DELETED_EVENT,
+  ADMIN_ADDED_EVENT,
+  ADMIN_REMOVED_EVENT
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
 import { Channelize } from 'channelize-chat';
@@ -205,6 +207,48 @@ export const userRemoved = (state, action) => {
   state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 
+export const adminAdded = (state, action) => {
+  let { conversation, adminUser } = action.payload;
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  const jsonConversation = activeConversation.toJSON();
+
+  jsonConversation.members = jsonConversation.members.map(member => {
+    if (member.userId == adminUser.id) {
+      member.isAdmin = true
+    }
+    return member
+  });
+
+  //Convert in conversation model
+  const client = Channelize.client.getInstance();
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+};
+
+export const adminRemoved = (state, action) => {
+  let { conversation, adminUser } = action.payload;
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  const jsonConversation = activeConversation.toJSON();
+
+  jsonConversation.members = jsonConversation.members.map(member => {
+    if (member.userId == adminUser.id) {
+      member.isAdmin = false
+    }
+    return member
+  });
+
+  //Convert in conversation model
+  const client = Channelize.client.getInstance();
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+};
+
 export const conversationDeleted = (state, action) => {
   let { conversation } = action.payload;
 
@@ -316,7 +360,7 @@ export const userUnblocked = (state, action) => {
 };
 
 export const typingEvent = (state, action) => {
-  const { conversation, isTyping, user} = action.payload;
+  const { conversation, isTyping, user } = action.payload;
   const activeConversation = state.conversation;
   if (!activeConversation || activeConversation.id != conversation.id) {
     return
@@ -361,7 +405,9 @@ export const handlers = {
   [USER_UNBLOCKED_EVENT]: userUnblocked,
   [USER_REMOVED_EVENT]: userRemoved,
   [USER_CONVERSATION_DELETED_EVENT]: conversationDeleted,
-  [TYPING_EVENT]: typingEvent
+  [TYPING_EVENT]: typingEvent,
+  [ADMIN_ADDED_EVENT]: adminAdded,
+  [ADMIN_REMOVED_EVENT]: adminRemoved,
 };
 
 export default createReducer(INITIAL_STATE, handlers);

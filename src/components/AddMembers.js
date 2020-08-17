@@ -13,7 +13,8 @@ import styled from 'styled-components/native';
 import { connect } from 'react-redux';
 import { capitalize } from '../utils';
 import { ListItem, Button, Input, CheckBox, SearchBar } from 'react-native-elements';
-import Avatar from './Avatar'
+import Avatar from './Avatar';
+import Overlay from './Overlay';
 import debounce from 'lodash/debounce';
 
 const Container = styled.ScrollView`
@@ -27,10 +28,24 @@ const Container = styled.ScrollView`
 `;
 
 const Header = styled.View`
-  flex-direction: row;
+  flex-direction: column;
   background-color: ${props => props.theme.addMembers.backgroundColor };
+`;
+
+const HeaderContent = styled.View`
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+`;
+
+const HeaderErrorMessage = styled.View`
+  margin-top: 10px;
+  flex-direction: row;
+  justify-content: center; 
+`;
+
+const HeaderErrorMessageText = styled.Text`
+  color: ${props => props.theme.colors.danger };
 `;
 
 const ContactsContainer = styled.View`
@@ -329,7 +344,8 @@ class AddMembers extends PureComponent {
       error,
       client,
       connected,
-      connecting
+      connecting,
+      actionInProcess
     } = this.props;
     const { search, selectedMembers, showSearchBar } = this.state;
 
@@ -367,69 +383,76 @@ class AddMembers extends PureComponent {
     return (
       <Container>
         <Header style={headerStyle}>
-          <HeaderBackIcon>
-            <TouchableOpacity onPress={this.back}>
-              <Icon 
-                name ="arrow-back" 
-                size={30} 
-                color={theme.colors.primary}
+          <HeaderContent>
+            <HeaderBackIcon>
+              <TouchableOpacity onPress={this.back}>
+                <Icon 
+                  name ="arrow-back" 
+                  size={30} 
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            </HeaderBackIcon>
+            { !showSearchBar && 
+              <React.Fragment>
+                <HeaderTitle>
+                  <HeaderTitleText>Add Members</HeaderTitleText>
+                </HeaderTitle>
+                <HeaderIcons>
+                  <TouchableOpacity onPress={this._toggleSearchInput}>
+                    <Icon 
+                      name ="search" 
+                      size={30} 
+                      color={theme.colors.primary}
+                    />
+                  </TouchableOpacity>
+                  { selectedMembers.length > 0 &&
+                    <React.Fragment>
+                      <TouchableOpacity style={{marginLeft: 15}} onPress={this._addMembers}>
+                        <Icon 
+                          name ="check"
+                          size={30} 
+                          color={theme.colors.primary}
+                        />
+                      </TouchableOpacity>
+                    </React.Fragment>
+                  }
+                </HeaderIcons>
+              </React.Fragment>
+            }
+            { showSearchBar &&
+              <SearchBar
+                containerStyle={{
+                  paddingBottom: 1,
+                  paddingTop: 1,
+                  width: "90%",
+                  backgroundColor: theme.addMembers.searchBar.backgroundColor,
+                }}
+                inputStyle={{
+                  color: theme.addMembers.searchBar.inputTextColor
+                }}
+                placeholder="Search"
+                placeholderTextColor={theme.colors.textGrey}
+                searchIcon={false}
+                cancelIcon={false}
+                platform={Platform.OS}
+                onClear={this._resetSearch}
+                onChangeText={this._onChangeSearch}
+                value={search}
               />
-            </TouchableOpacity>
-          </HeaderBackIcon>
-          { !showSearchBar && 
-            <React.Fragment>
-              <HeaderTitle>
-                <HeaderTitleText>Add Members</HeaderTitleText>
-              </HeaderTitle>
-              <HeaderIcons>
-                <TouchableOpacity onPress={this._toggleSearchInput}>
-                  <Icon 
-                    name ="search" 
-                    size={30} 
-                    color={theme.colors.primary}
-                  />
-                </TouchableOpacity>
-                { selectedMembers.length > 0 &&
-                  <React.Fragment>
-                    <TouchableOpacity style={{marginLeft: 15}} onPress={this._addMembers}>
-                      <Icon 
-                        name ="check"
-                        size={30} 
-                        color={theme.colors.primary}
-                      />
-                    </TouchableOpacity>
-                  </React.Fragment>
-                }
-              </HeaderIcons>
-            </React.Fragment>
-          }
-          { showSearchBar &&
-            <SearchBar
-              containerStyle={{
-                paddingBottom: 1,
-                paddingTop: 1,
-                width: "90%",
-                backgroundColor: theme.addMembers.searchBar.backgroundColor,
-              }}
-              inputStyle={{
-                color: theme.addMembers.searchBar.inputTextColor
-              }}
-              placeholder="Search"
-              placeholderTextColor={theme.colors.textGrey}
-              searchIcon={false}
-              cancelIcon={false}
-              platform={Platform.OS}
-              onClear={this._resetSearch}
-              onChangeText={this._onChangeSearch}
-              value={search}
-            />
+            }
+          </HeaderContent>
+          {!connecting && !connected && 
+            <HeaderErrorMessage>
+              <HeaderErrorMessageText>Disconnected</HeaderErrorMessageText>
+            </HeaderErrorMessage>
           }
         </Header>
 
-        {!connecting && !connected && 
-          <View>
-            <Text>Disconnected</Text>
-          </View>
+        { actionInProcess && 
+          <Overlay>
+            <Text>Adding members...</Text>
+          </Overlay>
         }
 
         <SelectedMembersContainer>

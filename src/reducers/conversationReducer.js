@@ -22,6 +22,8 @@ import {
   TOTAL_UNREAD_MESSAGE_COUNT_UPDATED_EVENT,
   USER_REMOVED_EVENT,
   USER_CONVERSATION_DELETED_EVENT,
+  ADMIN_ADDED_EVENT,
+  ADMIN_REMOVED_EVENT
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
 
@@ -396,6 +398,46 @@ export const conversationDeleted = (state, action) => {
   state.list = finalList
 };
 
+export const adminAdded = (state, action) => {
+  let { conversation, adminUser } = action.payload;
+  const finalList = state.list.map((item, index) => {
+    if (item.id == conversation.id) {
+      item.members = item.members.map(member => {
+        if (member.userId == adminUser.id) {
+          member.isAdmin = true
+        }
+        return member
+      });
+
+      return item;
+    } else {
+      return item;
+    }
+  })
+
+  state.list = finalList;
+};
+
+export const adminRemoved = (state, action) => {
+  let { conversation, adminUser } = action.payload;
+  const finalList = state.list.map((item, index) => {
+    if (item.id == conversation.id) {
+      item.members = item.members.map(member => {
+        if (member.userId == adminUser.id) {
+          member.isAdmin = true
+        }
+        return member
+      });
+
+      return item;
+    } else {
+      return item;
+    }
+  })
+
+  state.list = finalList;
+};
+
 // export const listMembersSuccess = (state, action) => {
 //   let { conversation, members, timestamp } = action.payload;
 
@@ -451,6 +493,8 @@ export const handlers = {
   [USER_UNBLOCKED_EVENT]: userUnblocked,
   [USER_REMOVED_EVENT]: userRemoved,
   [USER_CONVERSATION_DELETED_EVENT]: conversationDeleted,
+  [ADMIN_ADDED_EVENT]: adminAdded,
+  [ADMIN_REMOVED_EVENT]: adminRemoved,
 };
 
 export default createReducer(INITIAL_STATE, handlers);

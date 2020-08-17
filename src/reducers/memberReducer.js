@@ -21,13 +21,27 @@ import {
   PROCESS_UPDATE_TITLE,
   UPDATE_TITLE_FAIL,
   UPDATE_TITLE_SUCCESS,
+  REMOVING_MEMBERS,
+  REMOVE_MEMBERS_FAIL,
+  REMOVE_MEMBERS_SUCCESS,
+  ADDING_ADMIN,
+  ADD_ADMIN_FAIL,
+  ADD_ADMIN_SUCCESS,
+  REMOVING_ADMIN,
+  REMOVE_ADMIN_FAIL,
+  REMOVE_ADMIN_SUCCESS,
+  UPDATING_PROFILE_PHOTO,
+  UPDATE_PROFILE_PHOTO_FAIL,
+  UPDATE_PROFILE_PHOTO_SUCCESS,
   MEMBERS_ADDED_EVENT,
   MEMBERS_REMOVED_EVENT,
   USER_BLOCKED_EVENT,
   USER_UNBLOCKED_EVENT,
   USER_REMOVED_EVENT,
   USER_CONVERSATION_DELETED_EVENT,
-  CONVERSATION_UPDATED_EVENT
+  CONVERSATION_UPDATED_EVENT,
+  ADMIN_ADDED_EVENT,
+  ADMIN_REMOVED_EVENT
 } from '../constants';
 import { createReducer, uniqueList } from '../utils';
 import { Channelize } from 'channelize-chat';
@@ -147,6 +161,45 @@ export const addMembersSuccess = (state, action) => {
   state.actionInProcess = false;
 };
 
+export const removingMembers = (state, action) => {
+  state.actionInProcess = true;
+};
+
+export const removeMembersFail = (state, action) => {
+  state.actionInProcess = false;
+  state.error = action.payload;
+};
+
+export const removeMembersSuccess = (state, action) => {
+  state.actionInProcess = false;
+};
+
+export const addingAdmin = (state, action) => {
+  state.actionInProcess = true;
+};
+
+export const addAdminFail = (state, action) => {
+  state.actionInProcess = false;
+  state.error = action.payload;
+};
+
+export const addAdminSuccess = (state, action) => {
+  state.actionInProcess = false;
+};
+
+export const removingAdmin = (state, action) => {
+  state.actionInProcess = true;
+};
+
+export const removeAdminFail = (state, action) => {
+  state.actionInProcess = false;
+  state.error = action.payload;
+};
+
+export const removeAdminSuccess = (state, action) => {
+  state.actionInProcess = false;
+};
+
 export const updateTitleSuccess = (state, action) => {
   state.actionInProcess = false;
   if (state.conversation) {
@@ -161,6 +214,61 @@ export const updateTitleSuccess = (state, action) => {
 export const updateTitleFail = (state, action) => {
   state.actionInProcess = false;
   state.error = action.payload;
+};
+
+export const updatingProfilePhoto = (state, action) => {
+  state.actionInProcess = true;
+};
+
+export const updateProfilePhotoSuccess = (state, action) => {
+  state.actionInProcess = false;
+};
+
+export const updateProfilePhotoFail = (state, action) => {
+  state.actionInProcess = false;
+  state.error = action.payload;
+};
+
+export const adminAdded = (state, action) => {
+  let { conversation, adminUser } = action.payload;
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  const jsonConversation = activeConversation.toJSON();
+
+  jsonConversation.members = jsonConversation.members.map(member => {
+    if (member.userId == adminUser.id) {
+      member.isAdmin = true
+    }
+    return member
+  });
+
+  //Convert in conversation model
+  const client = Channelize.client.getInstance();
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+};
+
+export const adminRemoved = (state, action) => {
+  let { conversation, adminUser } = action.payload;
+  const activeConversation = state.conversation;
+  if (!activeConversation || activeConversation.id != conversation.id) {
+    return
+  }
+
+  const jsonConversation = activeConversation.toJSON();
+
+  jsonConversation.members = jsonConversation.members.map(member => {
+    if (member.userId == adminUser.id) {
+      member.isAdmin = false
+    }
+    return member
+  });
+
+  //Convert in conversation model
+  const client = Channelize.client.getInstance();
+  state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 
 export const conversationUpdated = (state, action) => {
@@ -231,7 +339,7 @@ export const userRemoved = (state, action) => {
 
   let jsonConversation = activeConversation.toJSON();
   jsonConversation.isActive = false;
-
+  jsonConversation.isAdmin = false;
   state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 
@@ -325,6 +433,18 @@ export const handlers = {
   [PROCESS_UPDATE_TITLE]: processUpdateTitle,
   [UPDATE_TITLE_FAIL]: updateTitleFail,
   [UPDATE_TITLE_SUCCESS]: updateTitleSuccess,
+  [UPDATING_PROFILE_PHOTO]: updatingProfilePhoto,
+  [UPDATE_PROFILE_PHOTO_FAIL]: updateProfilePhotoFail,
+  [UPDATE_PROFILE_PHOTO_SUCCESS]: updateProfilePhotoSuccess,
+  [REMOVING_MEMBERS]: removingMembers,
+  [REMOVE_MEMBERS_FAIL]: removeMembersFail,
+  [REMOVE_MEMBERS_SUCCESS]: removeMembersSuccess,
+  [ADDING_ADMIN]: addingAdmin,
+  [ADD_ADMIN_FAIL]: addAdminFail,
+  [ADD_ADMIN_SUCCESS]: addAdminSuccess,
+  [REMOVING_ADMIN]: removingAdmin,
+  [REMOVE_ADMIN_FAIL]: removeAdminFail,
+  [REMOVE_ADMIN_SUCCESS]: removeAdminSuccess,
   [MEMBERS_ADDED_EVENT]: membersAdded,
   [MEMBERS_REMOVED_EVENT]: membersRemoved,
   [USER_BLOCKED_EVENT]: userBlocked,
@@ -332,6 +452,8 @@ export const handlers = {
   [USER_REMOVED_EVENT]: userRemoved,
   [USER_CONVERSATION_DELETED_EVENT]: conversationDeleted,
   [CONVERSATION_UPDATED_EVENT]: conversationUpdated,
+  [ADMIN_ADDED_EVENT]: adminAdded,
+  [ADMIN_REMOVED_EVENT]: adminRemoved,
 };
 
 export default createReducer(INITIAL_STATE, handlers);

@@ -12,7 +12,6 @@ import {
 } from "../actions";
 import { ListItem, Text, Badge } from 'react-native-elements'
 import Avatar from './Avatar'
-import ContactList from './ContactList';
 import { Icon } from 'react-native-elements';
 
 const Container = styled.View`
@@ -27,8 +26,22 @@ const Container = styled.View`
 
 const Header = styled.View`
   padding: 10px;
-  flex-direction: row;
+  flex-direction: column;
   background-color: ${props => props.theme.conversationList.backgroundColor };
+`;
+
+const HeaderContent = styled.View`
+  flex-direction: row;
+`;
+
+const HeaderErrorMessage = styled.View`
+  margin-top: 10px;
+  flex-direction: row;
+  justify-content: center; 
+`;
+
+const HeaderErrorMessageText = styled.Text`
+  color: ${props => props.theme.colors.danger };
 `;
 
 const HeaderImage = styled.View`
@@ -49,9 +62,7 @@ const HeaderTitleText = styled.Text`
 `;
 
 const HeaderIcons = styled.View`
-  display: flex;
   flex-direction: row;
-  justify-content: space-between;
 `;
 
 const LastMessageText = styled.Text`
@@ -308,6 +319,7 @@ class ConversationList extends PureComponent {
             shadowRadius: 1.00,
             elevation: 1
           }}>
+          <HeaderContent>
             <HeaderImage>
               <Avatar 
                 title={user.displayName}
@@ -343,13 +355,13 @@ class ConversationList extends PureComponent {
                 />
               </TouchableOpacity>
             </HeaderIcons>
-          </Header>
-
+          </HeaderContent>
           {!connecting && !connected && 
-            <View>
-              <Text>Disconnected</Text>
-            </View>
+             <HeaderErrorMessage>
+              <HeaderErrorMessageText>Disconnected</HeaderErrorMessageText>
+            </HeaderErrorMessage>
           }
+          </Header>
 
           { loading &&
               <View>

@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
+import { BackHandler } from "react-native";
 
 import { 
   App,
@@ -77,6 +78,26 @@ class ConversationWindowScreen extends Component {
     super(props);
   }
 
+  componentDidMount() {
+    BackHandler.addEventListener(
+      "hardwareBackPress",
+      this.navigatePopToTop
+    );
+  }
+
+  navigatePopToTop = () => {
+    const { params  } = this.props.route;
+    if (params && params.popToTop) {
+      this.props.navigation.navigate('ConversationList');
+      return true;
+    }
+    return false;
+  }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.navigatePopToTop);
+  }
+
   onLocationClick = (callback) => {
     this.props.navigation.navigate('Location', {
       sendLocation: callback
@@ -88,6 +109,11 @@ class ConversationWindowScreen extends Component {
   }
 
   onBack = () => {
+    const { params  } = this.props.route;
+    if (params && params.popToTop) {
+      this.navigatePopToTop();
+      return;
+    }
     this.props.navigation.goBack();
   }
 
@@ -125,6 +151,10 @@ class ConversationDetailsScreen extends Component {
     this.props.navigation.goBack();
   }
 
+  onConversationDeleted = (conversation) => {
+    this.props.navigation.navigate('ConversationList');
+  }
+
   render() {
     var client = new Channelize.client({publicKey: PUBLIC_KEY});
     var theme = {
@@ -134,7 +164,8 @@ class ConversationDetailsScreen extends Component {
       <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
         <ConversationDetails
           onBack={this.onBack}
-          onAddMembersClick={this.onAddMembersClick} 
+          onAddMembersClick={this.onAddMembersClick}
+          onConversationDeleted={this.onConversationDeleted}
         />
       </App>
     );
@@ -216,7 +247,9 @@ class CreateGroupScreen extends Component {
   }
 
   onCreateSuccess = () => {
-    this.props.navigation.navigate('ConversationWindow') 
+    this.props.navigation.navigate('ConversationWindow', {
+      popToTop: true
+    }) 
   }
 
   render() {

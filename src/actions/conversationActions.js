@@ -22,7 +22,10 @@ import {
   DELETE_CONVERSATION_SUCCESS,
   PROCESS_UPDATE_TITLE,
   UPDATE_TITLE_FAIL,
-  UPDATE_TITLE_SUCCESS
+  UPDATE_TITLE_SUCCESS,
+  UPDATING_PROFILE_PHOTO,
+  UPDATE_PROFILE_PHOTO_FAIL,
+  UPDATE_PROFILE_PHOTO_SUCCESS
 } from '../constants';
 
 import { uploadFile } from '../native';
@@ -125,6 +128,31 @@ export const updateTitle = (conversation, title) => {
       dispatch({
         type: UPDATE_TITLE_SUCCESS,
         payload: {title: title}
+      });
+    })
+  };
+};
+
+export const updateProfilePhoto = (client, conversation, file) => {
+  return async dispatch => {
+    dispatch({
+      type: UPDATING_PROFILE_PHOTO,
+      payload: {}
+    });
+
+    const fileData = await uploadFile(client, file, 'image');
+
+    return conversation.updateProfilePhoto(fileData['fileUrl'], (err, response) => {
+      if (err) {
+        dispatch({
+          type: UPDATE_PROFILE_PHOTO_FAIL,
+          payload: err
+        });
+        return;
+      }
+      dispatch({
+        type: UPDATE_PROFILE_PHOTO_SUCCESS,
+        payload: {profileImageUrl: profileImageUrl}
       });
     })
   };

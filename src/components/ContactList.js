@@ -28,10 +28,25 @@ const Container = styled.ScrollView`
 
 const Header = styled.View`
   padding-left: 10px;
-  flex-direction: row;
+  flex-direction: column;
   background-color: ${props => props.theme.contactList.backgroundColor };
+`;
+
+const HeaderContent = styled.View`
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+`;
+
+const HeaderErrorMessage = styled.View`
+  padding-bottom: 10px;
+  padding-top: 10px;
+  flex-direction: row;
+  justify-content: center; 
+`;
+
+const HeaderErrorMessageText = styled.Text`
+  color: ${props => props.theme.colors.danger };
 `;
 
 const ContactsContainer = styled.View`
@@ -254,41 +269,42 @@ class ContactList extends PureComponent {
             shadowRadius: 1.00,
             elevation: 1
           }}>
-          <HeaderBackIcon>
-            <TouchableOpacity onPress={this.back}>
-              <Icon 
-                name ="arrow-back" 
-                size={30} 
-                color={theme.colors.primary}
-              />
-            </TouchableOpacity>
-          </HeaderBackIcon>
-          <SearchBar
-            containerStyle={{
-              paddingBottom: 1,
-              paddingTop: 1,
-              width: "90%",
-              backgroundColor: theme.contactList.searchBar.backgroundColor,
-            }}
-            inputStyle={{
-              color: theme.contactList.searchBar.inputTextColor
-            }}
-            placeholder="Search"
-            placeholderTextColor={theme.colors.textGrey}
-            searchIcon={false}
-            cancelIcon={false}
-            platform={Platform.OS}
-            onClear={this._resetSearch}
-            onChangeText={this._onChangeSearch}
-            value={search}
-          />
+          <HeaderContent>
+            <HeaderBackIcon>
+              <TouchableOpacity onPress={this.back}>
+                <Icon 
+                  name ="arrow-back" 
+                  size={30} 
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            </HeaderBackIcon>
+            <SearchBar
+              containerStyle={{
+                paddingBottom: 1,
+                paddingTop: 1,
+                width: "90%",
+                backgroundColor: theme.contactList.searchBar.backgroundColor,
+              }}
+              inputStyle={{
+                color: theme.contactList.searchBar.inputTextColor
+              }}
+              placeholder="Search"
+              placeholderTextColor={theme.colors.textGrey}
+              searchIcon={false}
+              cancelIcon={false}
+              platform={Platform.OS}
+              onClear={this._resetSearch}
+              onChangeText={this._onChangeSearch}
+              value={search}
+            />
+          </HeaderContent>
+          {!connecting && !connected && 
+            <HeaderErrorMessage>
+              <HeaderErrorMessageText>Disconnected</HeaderErrorMessageText>
+            </HeaderErrorMessage>
+          }
         </Header>
-
-        {!connecting && !connected && 
-          <View>
-            <Text>Disconnected</Text>
-          </View>
-        }
 
         <React.Fragment>
           <SuggestedText>Suggested</SuggestedText>
