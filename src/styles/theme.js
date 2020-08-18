@@ -81,16 +81,16 @@ export const lightTheme = {
   	  buttonTitleColor: Colors.danger
   	}
   },
-  contactList: {
+  search: {
   	backgroundColor: Colors.backgroundLightColor,
   	header: {},
     searchBar: {
       inputTextColor: Colors.textDark,
       backgroundColor: Colors.backgroundLightColor,
     },
-  	user: {
-  	  displayNameColor: Colors.textDark
-  	}
+    searchList: {
+      searchedItemNameColor: Colors.textDark
+    }
   },
   addMembers: {
     backgroundColor: Colors.backgroundLightColor,
@@ -200,16 +200,16 @@ export const darkTheme = {
   	  buttonTitleColor: Colors.danger
   	}
   },
-  contactList: {
+  search: {
   	backgroundColor: Colors.backgroundDarkColor,
   	header: {},
     searchBar: {
       inputTextColor: Colors.textLight,
       backgroundColor: Colors.backgroundDarkColor,
     },
-  	user: {
-  	  displayNameColor: Colors.textLight
-  	}
+  	searchList: {
+      searchedItemNameColor: Colors.textLight
+    }
   },
   addMembers: {
     backgroundColor: Colors.backgroundDarkColor,

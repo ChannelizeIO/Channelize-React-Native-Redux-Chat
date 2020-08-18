@@ -3,7 +3,7 @@ export App from './App';
 export ConversationList from './ConversationList';
 export ConversationWindow from './ConversationWindow';
 export ConversationDetails from './ConversationDetails';
-export ContactList from './ContactList';
+export Search from './Search';
 export AddMembers from './AddMembers';
 export CreateGroup from './CreateGroup';
 export Location from './Location';

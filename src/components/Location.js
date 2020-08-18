@@ -84,14 +84,18 @@ class Location extends PureComponent {
   _init() {
     RNGooglePlaces.getCurrentPlace(['placeID', 'location', 'name', 'address'])
     .then((results) => {
-      console.log('current places', results)
 
       this._searchLocationOnServer(results[0].name, true)
     })
     .catch(error => {
-      console.log(error)
+      console.log(error);
 
-      this._searchLocationOnServer("Washington", true)
+      let { initialLocation } = this.props;
+      if (!initialLocation) 
+      {
+        initialLocation = "Washington"
+      }
+      this._searchLocationOnServer(initialLocation, true)
     })
   }
 
@@ -169,12 +173,17 @@ class Location extends PureComponent {
   }
 
   _searchLocationOnServer = (value, init = false) => {
-    const { client } = this.props;
+    let { client, options } = this.props;
 
     this.setState({loading: true});
-    RNGooglePlaces.getAutocompletePredictions(value)
+
+    let predictonOptions = {}
+    if (!options) {
+      options = {};
+    }
+
+    RNGooglePlaces.getAutocompletePredictions(value, options)
     .then((results) => {
-      console.log("results", results)
 
       let state = {
         loading: false,
@@ -196,19 +205,23 @@ class Location extends PureComponent {
   _onPlacePress = (place) => {
     const { onPlacePress } = this.props;
 
-    RNGooglePlaces.lookUpPlaceByID(place.placeID)
-    .then((results) => {
-      console.log(results)
+    function lookUpPlaceByID(place, successCallback) {
+      RNGooglePlaces.lookUpPlaceByID(place.placeID)
+      .then((results) => {
 
-      if (onPlacePress && typeof onPlacePress == 'function') {
-        onPlacePress(results)
-      }
-    })
-    .catch((error) => {
-      console.log(error.message)
+        if (successCallback && typeof successCallback == 'function') {
+          successCallback(results)
+        }
+      })
+      .catch((error) => {
+        console.log(error.message)
 
-      this.setState({error: error});
-    });
+      });
+    }
+
+    if (onPlacePress && typeof onPlacePress == 'function') {
+      onPlacePress(place, lookUpPlaceByID)
+    }
   }
 
   back = () => {
@@ -315,7 +328,7 @@ class Location extends PureComponent {
                 renderItem={this._renderPlace}
                 data={places}
                 extraData={true}
-                keyExtractor={(item, index) => item.id}
+                keyExtractor={(item, index) => item.placeID}
                 ListEmptyComponent={<Text>No Place Found</Text>}
               />
             }

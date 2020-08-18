@@ -8,6 +8,9 @@ import {
   LOADING_LOAD_MORE_CONVERSATIONS,
   LOAD_MORE_CONVERSATIONS_FAIL,
   LOAD_MORE_CONVERSATIONS_SUCCESS,
+  SEARCHING_GROUPS,
+  SEARCH_GROUPS_FAIL,
+  SEARCH_GROUPS_SUCCESS,
   // LIST_MEMBERS_SUCCESS
   USER_STATUS_UPDATED_EVENT,
   NEW_MESSAGE_RECEIVED_EVENT,
@@ -33,6 +36,9 @@ const INITIAL_STATE = {
   loadingMoreConversations: false,
   allConversationsLoaded: false,
   error: null,
+
+  searching: false,
+  searchedGroups: [],
 
   // create Group
   creatingConversation: false,
@@ -84,6 +90,21 @@ export const loadMoreConversationsSuccess = (state, action) => {
 
 export const loadMoreConversationsFail = (state, action) => {
   state.loadingMoreConversations = false;
+  state.error = action.payload;
+};
+
+export const searchingGroups = (state, action) => {
+  state.searching = true;
+  state.searchedGroups = [];
+};
+
+export const searchGroupsSuccess = (state, action) => {
+  state.searching = false;
+  state.searchedGroups = action.payload;
+};
+
+export const searchGroupsFail = (state, action) => {
+  state.searching = false;
   state.error = action.payload;
 };
 
@@ -478,6 +499,9 @@ export const handlers = {
   [LOADING_LOAD_MORE_CONVERSATIONS]: loadingLoadMoreConversations,
   [LOAD_MORE_CONVERSATIONS_FAIL]: loadMoreConversationsFail,
   [LOAD_MORE_CONVERSATIONS_SUCCESS]: loadMoreConversationsSuccess,
+  [SEARCHING_GROUPS]: searchingGroups,
+  [SEARCH_GROUPS_FAIL]: searchGroupsFail,
+  [SEARCH_GROUPS_SUCCESS]: searchGroupsSuccess,
   [USER_STATUS_UPDATED_EVENT]: userStatusUpdated,
   [NEW_MESSAGE_RECEIVED_EVENT]: newMessageReceived,
   [USER_JOINED_EVENT]: userJoined,

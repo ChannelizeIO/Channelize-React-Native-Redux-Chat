@@ -5,7 +5,9 @@ import {
   loadOnlineFriends,
   getFriendsList,
   searchFriendList,
-  setActiveUserId
+  searchGroups,
+  setActiveUserId,
+  setActiveConversation
 } from '../actions';
 import { withChannelizeContext } from '../context';
 import { theme } from '../styles/theme';
@@ -21,7 +23,7 @@ const Container = styled.ScrollView`
   top: 0px;
   height: 100%;
   width: 100%;
-  background-color: ${props => props.theme.contactList.backgroundColor };
+  background-color: ${props => props.theme.search.backgroundColor };
   display: flex;
   flex-direction: column;
 `;
@@ -29,7 +31,7 @@ const Container = styled.ScrollView`
 const Header = styled.View`
   padding-left: 10px;
   flex-direction: column;
-  background-color: ${props => props.theme.contactList.backgroundColor };
+  background-color: ${props => props.theme.search.backgroundColor };
 `;
 
 const HeaderContent = styled.View`
@@ -49,16 +51,24 @@ const HeaderErrorMessageText = styled.Text`
   color: ${props => props.theme.colors.danger };
 `;
 
-const ContactsContainer = styled.View`
+const ContentContainer = styled.View`
+`;
+
+const SeachListContainer = styled.View`
   width: 100%;
-  background-color: ${props => props.theme.contactList.backgroundColor };
+  background-color: ${props => props.theme.search.backgroundColor };
+`;
+
+const Center = styled.View`
+  justify-content: center;
+  align-self: center;
 `;
 
 const HeaderBackIcon = styled.View`
   margin-right: 10px;
 `;
 
-const SuggestedText = styled.Text`
+const SearchedListName = styled.Text`
   color: ${props => props.theme.colors.textGrey };
   text-transform: capitalize;
   padding-left: 15px;
@@ -66,12 +76,12 @@ const SuggestedText = styled.Text`
   padding-top: 15px;
 `;
 
-const ContactDisplayNameText = styled.Text`
-  color: ${props => props.theme.contactList.user.displayNameColor };
+const SearchedItemName = styled.Text`
+  color: ${props => props.theme.search.searchList.searchedItemNameColor };
   font-weight: bold;
 `;
 
-class ContactList extends PureComponent {
+class Search extends PureComponent {
   constructor(props) {
     super(props);
 
@@ -119,12 +129,28 @@ class ContactList extends PureComponent {
     return (
       <ListItem
         component={TouchableHighlight}
-        containerStyle={{ backgroundColor: theme.contactList.backgroundColor }}
+        containerStyle={{ backgroundColor: theme.search.backgroundColor }}
         key={member.id}
         leftAvatar={this._getContactAvatar(member)}
         title={this._renderDisplayName(member)}
         titleStyle={{ fontWeight: '500', fontSize: 16 }}
         onPress={() => this._onContactPress(member)}
+      />
+    );
+  };
+
+  _renderGroup = rowData => {
+    const { theme } = this.props;
+    const group = rowData.item;
+    return (
+      <ListItem
+        component={TouchableHighlight}
+        containerStyle={{ backgroundColor: theme.search.backgroundColor }}
+        key={group.id}
+        leftAvatar={this._getGroupAvatar(group)}
+        title={this._renderGroupName(group)}
+        titleStyle={{ fontWeight: '500', fontSize: 16 }}
+        onPress={() => this._onGroupPress(group)}
       />
     );
   };
@@ -174,6 +200,43 @@ class ContactList extends PureComponent {
       />)
   }
 
+  _getGroupAvatar = group => {
+    const { theme } = this.props;
+
+    let avatarUrl;
+    let avatarTitle;
+
+    avatarTitle = group.title;
+    if (!avatarTitle) {
+      avatarTitle = "Untitled group";
+    }
+    if (group.profileImageUrl) {
+      avatarUrl = group.profileImageUrl;
+    }
+
+    return (
+      <Avatar 
+        size="medium"
+        title={avatarTitle}
+        source={avatarUrl}
+      />)
+  }
+
+  _renderGroupName = group => {
+    console.log("gorup>>>>>>>>>>>>", group.title)
+    let title = capitalize(group.title);
+    if (!title) {
+      title = "Untitled group";
+    }
+
+    return (
+      <View>
+        <SearchedItemName numberOfLines={1}>{title}</SearchedItemName>
+      </View>
+    );
+  }
+
+
   _renderDisplayName = user => {
     let title;
     if (user) {
@@ -184,7 +247,7 @@ class ContactList extends PureComponent {
 
     return (
       <View>
-        <ContactDisplayNameText numberOfLines={1}>{title}</ContactDisplayNameText>
+        <SearchedItemName numberOfLines={1}>{title}</SearchedItemName>
       </View>
     );
   }
@@ -219,6 +282,15 @@ class ContactList extends PureComponent {
     friendListQuery.skip = 0;
     friendListQuery.sort = 'isOnline DESC, displayName ASC ';
     this.props.searchFriendList(friendListQuery);
+
+    // Load groups
+    let conversationListQuery = client.Conversation.createConversationListQuery();
+    conversationListQuery.search = value;
+    conversationListQuery.isGroup = true;
+    conversationListQuery.limit = 50;
+    conversationListQuery.skip = 0;
+    conversationListQuery.sort = 'updatedAt ASC';
+    this.props.searchGroups(conversationListQuery);
   }
 
   _onContactPress = user => {
@@ -230,6 +302,15 @@ class ContactList extends PureComponent {
     }
   }
 
+  _onGroupPress = group => {
+    const { onGroupClick } = this.props;
+
+    this.props.setActiveConversation(group);
+    if (onGroupClick && typeof onGroupClick == 'function') {
+      onGroupClick(group)
+    }
+  }
+  
   render() {
     let {
       theme, 
@@ -237,10 +318,13 @@ class ContactList extends PureComponent {
       loading,
       searching,
       searchedFriendList,
+      searchingGroups,
+      searchedGroups,
       error,
       client,
       connected,
-      connecting
+      connecting,
+
     } = this.props;
     const { search } = this.state;
 
@@ -258,6 +342,8 @@ class ContactList extends PureComponent {
 
     if (search) {
       friendList = searchedFriendList;
+    } else {
+      searchedGroups = [];
     }
 
     const user = client.getCurrentUser();
@@ -284,10 +370,10 @@ class ContactList extends PureComponent {
                 paddingBottom: 1,
                 paddingTop: 1,
                 width: "90%",
-                backgroundColor: theme.contactList.searchBar.backgroundColor,
+                backgroundColor: theme.search.searchBar.backgroundColor,
               }}
               inputStyle={{
-                color: theme.contactList.searchBar.inputTextColor
+                color: theme.search.searchBar.inputTextColor
               }}
               placeholder="Search"
               placeholderTextColor={theme.colors.textGrey}
@@ -306,38 +392,58 @@ class ContactList extends PureComponent {
           }
         </Header>
 
+        <ContentContainer>
+        { (loading || searching || searchingGroups) && 
+          <View>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        }
+
+        { !loading && !searching && !searchingGroups && !friendList.length && !searchedGroups.length &&
+          <Center><Text>No record Found</Text></Center>
+        }
+
         <React.Fragment>
-          <SuggestedText>Suggested</SuggestedText>
-          <ContactsContainer>
-            { (loading || searching) && 
-                <View>
-                  <ActivityIndicator size="large" color={theme.colors.primary} />
-                </View>
-            }
+          {  !loading && !searching && !!friendList.length && <SearchedListName>Contacts</SearchedListName> }
+          <SeachListContainer>
             { (!loading && !searching) &&
               <FlatList
                 renderItem={this._renderContact}
                 data={friendList}
                 extraData={true}
                 keyExtractor={(item, index) => item.id}
-                ListEmptyComponent={<Text>No contacts Found</Text>}
               />
             }
-          </ContactsContainer>
+          </SeachListContainer>
         </React.Fragment>
+
+        <React.Fragment>
+          { !!searchedGroups.length && <SearchedListName>Groups</SearchedListName> }
+          <SeachListContainer>
+            { !searchingGroups &&
+              <FlatList
+                renderItem={this._renderGroup}
+                data={searchedGroups}
+                extraData={true}
+                keyExtractor={(item, index) => item.id}
+              />
+            }
+          </SeachListContainer>
+        </React.Fragment>
+      </ContentContainer>
       </Container>
     )
   }
 };
 
-function mapStateToProps({ client, user }, ownProps) {
-  let props = {...user, ...client};
+function mapStateToProps({ client, user, conversation }, ownProps) {
+  let props = {...user, ...client, searchingGroups: conversation.searching, searchedGroups: conversation.searchedGroups};
   const mergedProps = { ...props, ...ownProps };
   return {...mergedProps}
 }
 
-ContactList = withChannelizeContext(
- theme(ContactList)
+Search = withChannelizeContext(
+ theme(Search)
 );
 
 export default connect(
@@ -346,6 +452,8 @@ export default connect(
     loadOnlineFriends,
     getFriendsList,
     searchFriendList,
-    setActiveUserId
+    setActiveUserId,
+    searchGroups,
+    setActiveConversation
   }
-)(ContactList);
+)(Search);

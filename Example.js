@@ -8,7 +8,7 @@ import {
   ConversationList,
   ConversationWindow,
   ConversationDetails,
-  ContactList,
+  Search,
   AddMembers,
   CreateGroup,
   Location,
@@ -26,9 +26,10 @@ if (process.env.NODE_ENV === 'development') {
   console.disableYellowBox = true;
 }
 
+
 let PUBLIC_KEY; //Channelize.io public key
 let LOGGEDIN_USER_ID;//User id of loggedin user
-let CH_ACCESS_TOKEN; //Channelize access token of loggedin userid 
+let CH_ACCESS_TOKEN; //Channelize access token of loggedin userid
 
 class ConversationListScreen extends Component {
   static navigationOptions = () => {
@@ -44,7 +45,7 @@ class ConversationListScreen extends Component {
   }
 
   onSearchIconClick = () => {
-    this.props.navigation.navigate('ContactList');
+    this.props.navigation.navigate('Search');
   }
 
   onAddIconClick = () => {
@@ -189,6 +190,10 @@ class ContactListScreen extends Component {
     this.props.navigation.navigate('ConversationWindow');
   }
 
+  onGroupClick = () => {
+    this.props.navigation.navigate('ConversationWindow');
+  }
+
   render() {
     var client = new Channelize.client({publicKey: PUBLIC_KEY});
     var theme = {
@@ -196,9 +201,10 @@ class ContactListScreen extends Component {
     }
     return (
       <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
-        <ContactList
+        <Search
           onBack={this.onBack}
           onContactClick={this.onContactClick} 
+          onGroupClick={this.onGroupClick} 
         />
       </App>
     );
@@ -281,12 +287,15 @@ class LocationScreen extends Component {
     this.props.navigation.goBack();
   }
 
-  onPlacePress = (place) => {
+  onPlacePress = (place, lookUpPlaceByIDCb) => {
     const { sendLocation } = this.props.route.params;
 
-    // Send location
-    sendLocation(place)
     this.props.navigation.navigate('ConversationWindow') 
+
+    // Send location
+    lookUpPlaceByIDCb(place, (result) => {
+      sendLocation(result)
+    })
   }
 
   render() {
@@ -298,7 +307,11 @@ class LocationScreen extends Component {
       <App theme={theme} client={client} userId={LOGGEDIN_USER_ID} accessToken={CH_ACCESS_TOKEN}>
         <Location
           onBack={this.onBack}
-          onPlacePress={this.onPlacePress} 
+          onPlacePress={this.onPlacePress}
+          initialLocation="New delhi"
+          options={{
+            country: 'IN'
+          }} 
         />
       </App>
     );
@@ -318,7 +331,7 @@ export default function Example() {
           <Stack.Screen name="ConversationList" component={ConversationListScreen} />
           <Stack.Screen name="ConversationWindow" component={ConversationWindowScreen} />
           <Stack.Screen name="ConversationDetails" component={ConversationDetailsScreen} />
-          <Stack.Screen name="ContactList" component={ContactListScreen} />
+          <Stack.Screen name="Search" component={ContactListScreen} />
           <Stack.Screen name="AddMembers" component={AddMembersScreen} />
           <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
           <Stack.Screen name="Location" component={LocationScreen} />

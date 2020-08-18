@@ -25,7 +25,10 @@ import {
   UPDATE_TITLE_SUCCESS,
   UPDATING_PROFILE_PHOTO,
   UPDATE_PROFILE_PHOTO_FAIL,
-  UPDATE_PROFILE_PHOTO_SUCCESS
+  UPDATE_PROFILE_PHOTO_SUCCESS,
+  SEARCHING_GROUPS,
+  SEARCH_GROUPS_FAIL,
+  SEARCH_GROUPS_SUCCESS
 } from '../constants';
 
 import { uploadFile } from '../native';
@@ -244,4 +247,26 @@ export const deleteConversation = (conversation) => {
       });
     })
   };
+};
+
+export const searchGroups = (conversatonListQuery) => {
+  return dispatch => {
+    dispatch({
+      type: SEARCHING_GROUPS,
+      payload: {}
+    });
+    conversatonListQuery.list((error, res) => {
+      if (error) {
+        dispatch({
+          type: SEARCH_GROUPS_FAIL,
+          payload: error
+        });
+        return;
+      }
+      dispatch({
+        type: SEARCH_GROUPS_SUCCESS,
+        payload: res
+      });
+    });
+  }
 };
