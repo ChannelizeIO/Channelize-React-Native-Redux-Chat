@@ -340,7 +340,15 @@ export const userRemoved = (state, action) => {
   let jsonConversation = activeConversation.toJSON();
   jsonConversation.isActive = false;
   jsonConversation.isAdmin = false;
+  jsonConversation.memberCount = conversation.memberCount;
   state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
+
+  const user = client.getCurrentUser();
+  const index = state.list.findIndex(member => member.userId == user.id)
+  if (index >=0) {
+    state.list.splice(index, 1);
+  }
+  state.list = uniqueList(state.list);
 };
 
 export const conversationDeleted = (state, action) => {

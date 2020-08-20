@@ -79,26 +79,6 @@ class ConversationWindowScreen extends Component {
     super(props);
   }
 
-  componentDidMount() {
-    BackHandler.addEventListener(
-      "hardwareBackPress",
-      this.navigatePopToTop
-    );
-  }
-
-  navigatePopToTop = () => {
-    const { params  } = this.props.route;
-    if (params && params.popToTop) {
-      this.props.navigation.navigate('ConversationList');
-      return true;
-    }
-    return false;
-  }
-
-  componentWillUnmount() {
-    BackHandler.removeEventListener('hardwareBackPress', this.navigatePopToTop);
-  }
-
   onLocationClick = (callback) => {
     this.props.navigation.navigate('Location', {
       sendLocation: callback
@@ -110,11 +90,6 @@ class ConversationWindowScreen extends Component {
   }
 
   onBack = () => {
-    const { params  } = this.props.route;
-    if (params && params.popToTop) {
-      this.navigatePopToTop();
-      return;
-    }
     this.props.navigation.goBack();
   }
 
@@ -253,9 +228,10 @@ class CreateGroupScreen extends Component {
   }
 
   onCreateSuccess = () => {
-    this.props.navigation.navigate('ConversationWindow', {
-      popToTop: true
-    }) 
+    this.props.navigation.reset({
+      index: 0,
+      routes: [{ name: 'ConversationList' }, { name: 'ConversationWindow' }],
+    });
   }
 
   render() {

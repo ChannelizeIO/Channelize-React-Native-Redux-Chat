@@ -258,7 +258,6 @@ class AddMembers extends PureComponent {
   back = () => {
     const { onBack } = this.props;
     const { showSearchBar } = this.state;
-
     if (showSearchBar) {
       this.setState({showSearchBar: false})
       return
@@ -324,7 +323,6 @@ class AddMembers extends PureComponent {
   }
 
   _addMembers = () => {
-    console.log("Add members");
     const { conversation } = this.props;
     const { selectedMembers } = this.state;
     const memberIds = selectedMembers.map(member => member.id)

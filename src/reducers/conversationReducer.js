@@ -222,7 +222,9 @@ export const membersAdded = (state, action) => {
     if (item.id == conversation.id) {
       item.memberCount = conversation.memberCount;
       item.updatedAt = timestamp;
-      item.members = item.members.concat(members)
+      if (item.members.length) {
+        item.members = item.members.concat(members)
+      }
 
       conversationIndex = index;
       latestConversation = item;
@@ -385,7 +387,15 @@ export const userRemoved = (state, action) => {
   const finalList = state.list.map((item, index) => {
     if (item.id == conversation.id) {
       item.isActive = false;
+      item.isAdmin = false;
+      item.memberCount = conversation.memberCount;
 
+      const client = Channelize.client.getInstance();
+      const user = client.getCurrentUser();
+      const index = item.members.findIndex(member => member.userId == user.id)
+      if (index >=0) {
+        item.members.splice(index, 1);
+      }
       return item;
     } else {
       return item;

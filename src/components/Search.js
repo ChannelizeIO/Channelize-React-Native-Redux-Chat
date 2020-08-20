@@ -289,7 +289,6 @@ class Search extends PureComponent {
     conversationListQuery.isGroup = true;
     conversationListQuery.limit = 50;
     conversationListQuery.skip = 0;
-    conversationListQuery.sort = 'updatedAt ASC';
     this.props.searchGroups(conversationListQuery);
   }
 

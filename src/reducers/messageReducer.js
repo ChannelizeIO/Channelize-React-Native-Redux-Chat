@@ -203,7 +203,8 @@ export const userRemoved = (state, action) => {
 
   let jsonConversation = activeConversation.toJSON();
   jsonConversation.isActive = false;
-
+  jsonConversation.isAdmin = false;
+  jsonConversation.memberCount = conversation.memberCount;
   state.conversation = new Channelize.core.Conversation.Model(client, jsonConversation);
 };
 

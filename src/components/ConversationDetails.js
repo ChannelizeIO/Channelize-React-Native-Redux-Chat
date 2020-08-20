@@ -175,9 +175,7 @@ class ConversationDetails extends PureComponent {
 
     // Load members
     if (conversation.isGroup) {
-      if (!conversation.members.length) {
-        this.props.getMembers(conversation);
-      }
+      this.props.getMembers(conversation);
       this.setState({title: conversation.title});
     }
   }
@@ -194,7 +192,7 @@ class ConversationDetails extends PureComponent {
 
   _updateProfilePhoto = () => {
     const { client, conversation, connected } = this.props;
-    if (!connected) {
+    if (!connected || !conversation.isGroup || !conversation.isAdmin) {
       return
     }
 
@@ -431,10 +429,6 @@ class ConversationDetails extends PureComponent {
 
     if (!conversation) {
       return null;
-    }
-
-    if (!list.length) {
-      list = conversation.members;
     }
 
     if (error) {
