@@ -16,14 +16,14 @@ import {
 } from '../constants';
 import { uploadFile } from '../native';
 
-export const sendFileToConversation = (client, conversation, file, body, attachmentType) => {
+export const sendFileToConversation = (client, conversation, file, body, attachmentType, thumbnailFile = null) => {
   return async dispatch => {
     dispatch({
       type: SENDING_FILE,
       payload: body
     });
     try {
-      const fileData = await uploadFile(client, file, attachmentType);
+      const fileData = await uploadFile(client, file, attachmentType, thumbnailFile);
       body = {
         id: body.id,
         attachments: [fileData]

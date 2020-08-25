@@ -280,6 +280,7 @@ class Search extends PureComponent {
     friendListQuery.search = value;
     friendListQuery.limit = 50;
     friendListQuery.skip = 0;
+    friendListQuery.includeBlocked = true;
     friendListQuery.sort = 'isOnline DESC, displayName ASC ';
     this.props.searchFriendList(friendListQuery);
 

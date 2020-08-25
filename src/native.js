@@ -1,5 +1,7 @@
 import ImagePicker from 'react-native-image-picker';
 import RNFetchBlob from 'rn-fetch-blob'
+import { createThumbnail as RNCreateThumbnail} from "react-native-create-thumbnail";
+import ImageResizer from 'react-native-image-resizer';
 
 export const pickImage = function(cb, mediaType='photo') {
   ImagePicker.launchImageLibrary({mediaType: mediaType}, (response) => {
@@ -30,10 +32,10 @@ export const pickImage = function(cb, mediaType='photo') {
     /** For react-native-image-picker library doesn't return type in iOS,
      *  it is necessary to force the type to be an image/jpeg (or whatever you're intended to be).
      */
-    if (!response.type && Platform.OS === 'ios') {
+    if (!response.type) {
       response.type = 'image/jpeg';
     }
-
+console.log('response', response);
    	return cb(null, {
    	  didCancel: response.didCancel,
       uri: response.uri,
@@ -44,9 +46,49 @@ export const pickImage = function(cb, mediaType='photo') {
   });
 }
 
-export const uploadFile = async function(client, file, type) {
-	let metaData = await client.File.__getMetaData(file, type);
-	const fileData = await client.File.__requestUploadUrl({name: file.name});
+export const createResizedImage = function(file, newWidth, newHeight) {
+  return new Promise((resolve, reject) => {
+    ImageResizer.createResizedImage(file.uri, newWidth, newHeight, 'JPEG', 100)
+    .then(response => {
+      return resolve({
+       uri: response.uri,
+       type: "image/jpeg",
+       height: response.height,
+       width: response.width
+     });
+    }).catch(err => {
+      reject(err);
+    });
+  })
+}
+
+export const createThumbnail = function(file, timestamp = 0) {
+  return new Promise((resolve, reject) => {
+    RNCreateThumbnail({
+      url: file.uri,
+      timeStamp: timestamp,
+    })
+    .then(response => {
+      return resolve({
+       uri: response.path,
+       type: "image/jpeg",
+       height: response.height,
+       width: response.width
+     });
+    }).catch(err => {
+      reject(err);
+    });
+  })
+}
+
+export const uploadFile = async function(client, file, type, thumbnailFile = null) {
+  let metaData = await client.File.__getMetaData(file, type);
+  if (thumbnailFile) {
+    metaData['thumbnailFile'] = thumbnailFile;
+  }
+
+  const requestUploadUrlData = client.File.__getRequestUploadUrlData(metaData);
+	const fileData = await client.File.__requestUploadUrl(requestUploadUrlData);
 
 	return new Promise((resolve, reject) => {
     return RNFetchBlob.fetch(
@@ -56,7 +98,23 @@ export const uploadFile = async function(client, file, type) {
   	    RNFetchBlob.wrap(file.uri)
     	).then(res => {
   	    metaData['fileUrl'] = fileData['fileUrl'];
-  	    metaData['type'] = metaData['attachmentType'];
+        metaData['type'] = metaData['attachmentType'];
+        
+        // Upload thumbnail
+        if (fileData['uploadThumbnailUrl']) {
+          let thumbnailFile = metaData['thumbnailFile'];
+          return RNFetchBlob.fetch(
+            'PUT',
+            fileData['uploadThumbnailUrl'],
+            {'Content-Type': thumbnailFile.type},
+              RNFetchBlob.wrap(thumbnailFile.uri)
+            ).then(res => {
+              delete metaData.thumbnailFile;
+              metaData['thumbnailUrl'] = fileData['thumbnailUrl'];
+              return resolve(metaData);
+            })
+        }
+        
   	    return resolve(metaData);
     	}).catch(err => {
   	    console.log('err', err);

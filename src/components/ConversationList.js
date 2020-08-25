@@ -115,7 +115,7 @@ class ConversationList extends PureComponent {
     // Load conversations
     let conversationListQuery = client.Conversation.createConversationListQuery();
     conversationListQuery.limit = this.limit;
-    conversationListQuery.skip = this.skip;
+    conversationListQuery.skip = this.skip = 0
     this.props.getConversationList(conversationListQuery);
   }
 
@@ -130,12 +130,9 @@ class ConversationList extends PureComponent {
       return
     }
 
-    // Set skip
-    this.skip = list.length;
-
     let conversationListQuery = client.Conversation.createConversationListQuery();
     conversationListQuery.limit = this.limit;
-    conversationListQuery.skip = this.skip;
+    conversationListQuery.skip = this.skip = list.length;
     this.props.loadMoreConversations(conversationListQuery)
   }
 

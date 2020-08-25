@@ -18,9 +18,12 @@ import { connect } from 'react-redux';
 import { modifyMessageList, capitalize, dateTimeParser, typingString } from '../utils';
 import { GiftedChat } from 'react-native-gifted-chat'
 import Avatar from './Avatar';
-import { pickImage } from '../native';
+import { pickImage, createThumbnail, createResizedImage } from '../native';
 import throttle from 'lodash/throttle';
 import debounce from 'lodash/debounce';
+import MessageImage from './MessageImage';
+import MessageVideo from './MessageVideo';
+import MessageLocation from './MessageLocation';
 
 const Container = styled.View`
   position: absolute;
@@ -105,12 +108,6 @@ const TypingView = styled.View`
 
 const TypingText = styled.Text`
   color: ${props => props.theme.colors.textGrey };
-`;
-
-const VideoMessageView = styled.View`
-  display: flex;
-  flex-direction: row;
-  padding: 10px;
 `;
 
 class ConversationWindow extends PureComponent {
@@ -290,22 +287,33 @@ class ConversationWindow extends PureComponent {
       }
 
       file.name = file.name ? file.name : file.uri.split('/').pop();
-      file.type = lookup(file.name);
-      let fileType = file.type.split('/').shift();
-      if (! ['image', 'video', 'audio'].includes(fileType) ) {
+      const mimeType = lookup(file.name);
+      if (mimeType) {
+        file.type = mimeType;
+      }
+      let attachmentType = file.type.split('/').shift();
+      if (! ['image', 'video', 'audio'].includes(attachmentType) ) {
         console.log("Invalid file type");
         return
       }
 
-      const body = {
-        id: uuidv4(),
-        pending: true,
-        attachments: [{
-          type: fileType,
-          thumbnailUrl: file.uri
-        }],
-      }
-      this.props.sendFileToConversation(client, conversation, file, body, fileType);
+      // Resize image
+      createResizedImage(file, 200, 200)
+      .then(thumbnailFile => {
+        const body = {
+          id: uuidv4(),
+          pending: true,
+          attachments: [{
+            type: attachmentType,
+            thumbnailUrl: thumbnailFile.uri,
+            fileUrl: file.uri,
+          }],
+        }
+        this.props.sendFileToConversation(client, conversation, file, body, attachmentType, thumbnailFile);
+      })
+      .catch(err => {
+        console.log(err);
+      });
     })
   }
 
@@ -321,23 +329,39 @@ class ConversationWindow extends PureComponent {
       }
 
       file.name = file.name ? file.name : file.uri.split('/').pop();
-      file.type = lookup(file.name);
-      let fileType = file.type.split('/').shift();
-      if (! ['image', 'video', 'audio'].includes(fileType) ) {
+      const mimeType = lookup(file.name);
+      if (mimeType) {
+        file.type = mimeType;
+      }
+      let attachmentType = file.type.split('/').shift();
+      if (! ['image', 'video', 'audio'].includes(attachmentType) ) {
         console.log("Invalid file type");
         return
       }
 
-      const body = {
-        id: uuidv4(),
-        pending: true,
-        attachments: [{
-          type: fileType,
-          name: file.name,
-          fileUrl: file.uri
-        }],
-      }
-      this.props.sendFileToConversation(client, conversation, file, body, fileType);
+      // Create thumbnail from video
+      createThumbnail(file)
+      .then(thumbnailFile => {
+
+        // Resize thumbnail image
+        createResizedImage(thumbnailFile, 200, 200)
+        .then(thumbnailFile => {
+          const body = {
+            id: uuidv4(),
+            pending: true,
+            attachments: [{
+              type: attachmentType,
+              fileUrl: file.uri,
+              thumbnailUrl: thumbnailFile.uri
+            }],
+          }
+          this.props.sendFileToConversation(client, conversation, file, body, attachmentType, thumbnailFile);
+        }).catch(err => {
+          console.log(err);
+        });
+      }).catch(err => {
+        console.log(err);
+      });
     }, 'video')
   }
 
@@ -613,33 +637,30 @@ class ConversationWindow extends PureComponent {
                 <Text>No Record Found</Text>
               )
             }}
+            renderMessageImage={(message) => {
+              if (!message || !message.currentMessage) {
+                return null;
+              }
+
+              message = message.currentMessage;
+              const attachment = message.attachments[0];
+              if (!attachment) {
+                return null;
+              }
+
+              return (
+                ['image', 'gif', 'sticker'].indexOf(attachment.type) >= 0 ?
+                  <MessageImage message={message} />
+                :
+                <MessageLocation message={message} />
+              ) 
+            }}
             renderMessageVideo={(message) => {
-              const userMessage = message.currentMessage.user._id == user.id;
-              const textStyle = {
-                marginLeft: 5,
-                color: userMessage ? theme.colors.textLight : theme.colors.textDark
+              if (!message || !message.currentMessage) {
+                return null;
               }
               return (
-                  <TouchableOpacity onPress={() => {
-                      const url = message.currentMessage.videoProps.fileUrl;
-                      Linking.canOpenURL(url).then(supported => {
-                        if (!supported) {
-                          console.error('No handler for URL:', url);
-                        }
-                        else {
-                          Linking.openURL(url);
-                        }
-                      })
-                    }}>
-                  <VideoMessageView>
-                    <Icon
-                      name ="videocam" 
-                      size={20} 
-                      color={theme.colors.textGrey}
-                    />
-                    <Text style={textStyle}> {message.currentMessage.video} </Text>
-                  </VideoMessageView>
-                </TouchableOpacity>
+                <MessageVideo message={message.currentMessage} />
               )
             }}
           />

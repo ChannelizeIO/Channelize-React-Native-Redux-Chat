@@ -7,3 +7,6 @@ export Search from './Search';
 export AddMembers from './AddMembers';
 export CreateGroup from './CreateGroup';
 export Location from './Location';
+export MessageImage from './MessageImage';
+export MessageVideo from './MessageVideo';
+export MessageLocation from './MessageLocation';
