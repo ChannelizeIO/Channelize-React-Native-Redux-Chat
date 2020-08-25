@@ -118,7 +118,7 @@ export const modifyMessageList = (client, conversation, list) => {
 
       // Handle video message
       if (attachment.type == 'video') {
-        message.video = attachment.name;
+        message.video = attachment.thumbnailUrl;
         message.videoProps = {
          fileUrl: attachment.fileUrl,
          poster: attachment.thumbnailUrl,
